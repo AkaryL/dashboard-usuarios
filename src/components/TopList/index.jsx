@@ -2,18 +2,19 @@ export function TopList({ title, items = [], leftKey, rightKey }) {
   const safeItems = Array.isArray(items) ? items : [];
 
   return (
-    <div className="bg-white rounded-xl shadow p-4 max-h-[350px] overflow-y-auto">
-      <div className="font-medium mb-2">{title}</div>
-      <ul className="divide-y">
-        {safeItems.length ? safeItems.map((it, idx) => (
-          <li key={idx} className="py-2 flex justify-between text-sm">
-            <span className="truncate">{it[leftKey]}</span>
-            <span className="font-semibold">{it[rightKey]}</span>
-          </li>
-        )) : (
-          <li className="py-2 text-gray-400 text-sm">Sin datos</li>
-        )}
-      </ul>
+    <div className="bg-white rounded-lg overflow-hidden">
+      <div className="max-h-[280px] overflow-y-auto">
+        <ul className="divide-y divide-gray-100">
+          {safeItems.length ? safeItems.map((it, idx) => (
+            <li key={idx} className="px-4 py-3 flex justify-between items-center hover:bg-gray-50/50 transition-colors duration-150">
+              <span className="truncate text-xs text-gray-600 mr-3">{it[leftKey]}</span>
+              <span className="text-xs font-medium text-gray-900 flex-shrink-0">{it[rightKey]}</span>
+            </li>
+          )) : (
+            <li className="px-4 py-6 text-gray-500 text-center text-xs">No data available</li>
+          )}
+        </ul>
+      </div>
     </div>
   );
 }

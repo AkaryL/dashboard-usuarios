@@ -6,7 +6,7 @@ import L from "leaflet";
 
 function HeatLayer({ points }) {
   const map = useMap();
-  console.log(points)
+  console.log(points) 
   const safePoints = points;
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function Heatmap({
   heightClass = "h-96",
 }) {
   return (
-    <div className={`w-full ${heightClass} rounded-xl overflow-hidden shadow`}>
+    <div className={`w-full ${heightClass} rounded-lg overflow-hidden border border-gray-200`}>
       <MapContainer center={center} zoom={zoom} scrollWheelZoom className="w-full h-full">
         <TileLayer
           attribution="&copy; OpenStreetMap"

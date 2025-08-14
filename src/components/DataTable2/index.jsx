@@ -1,7 +1,7 @@
-// src/components/DataTable/index.jsx
+// src/components/DataTable2/index.jsx
 import React from "react";
 
-export default function DataTable({ columns = [], rows = [] }) {
+export default function DataTable2({ columns = [], rows = [] }) {
   const safeRows = Array.isArray(rows) ? rows : [];
 
   return (
@@ -32,7 +32,7 @@ export default function DataTable({ columns = [], rows = [] }) {
 
       {/* Desktop View - Table Layout */}
       <div className="hidden md:block">
-        <div className="overflow-x-auto overflow-y-auto h-[750px]">
+        <div className="overflow-x-auto overflow-y-auto h-[300px]">
           <table className="min-w-full">
             <thead className="bg-gray-50/50 border-b border-gray-100 sticky top-0">
               <tr>

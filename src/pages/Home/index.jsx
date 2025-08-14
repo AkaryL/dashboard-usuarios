@@ -19,50 +19,101 @@ export default function Home() {
     setMapData(points);
   }, [generalHeatPoints]);
 
-  // useEffect(() => {
-  //   Promise.all([
-  //     getLastVisits().then(r => r.data),
-  //     getTopUsers().then(r => r.data),
-  //     getTopRouters().then(r => r.data),
-  //     getHeatmapAll().then(r => r.data),
-  //   ]).then(([v, tu, tr, hm]) => {
-  //     setLastVisits(v);
-  //     setTopUsers(tu);
-  //     setTopRouters(tr);
-  //     setHeatPoints(hm);
-  //   }).catch(console.error);
-  // }, []);
-
   return (
-    <div className="max-w-7xl mx-auto p-4 space-y-6">
-      <div className="grid md:grid-cols-[2fr_1fr] gap-4">
-        <DataTable
-          columns={[
-            { key: "fecha", header: "Fecha" },
-            { key: "campaña", header: "Campaña vista" },
-            { key: "mac", header: "MAC" },
-            { key: "estacion", header: "Router" },
-          ]}
-          rows={visits}
-        />
-        <div className="grid grid-rows-2 gap-4">
-          <TopList 
-            title="Top 10 usuarios con más conexiones"
-            items={topUsers}
-            leftKey="mac"
-            rightKey="count" />
-          <TopList 
-            title="Top 10 puntos con más conexiones"
-            items={topRouters}
-            leftKey="estacion"
-            rightKey="count"
-          />
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-100">
 
-      <div>
-        <div className="mb-2 font-medium" onClick={() => console.log(generalHeatPoints)}>Mapa de calor (todas las conexiones)</div>
-        <Heatmap points={mapData} heightClass="h-[60vh]" />
+      <div className="max-w-7xl mx-auto px-8 py-8">
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200/80">
+            <div className="text-3xl font-light text-gray-900 mb-2">{visits?.length || 0}</div>
+            <div className="text-sm text-gray-600 font-medium">Total Visits</div>
+          </div>
+          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200/80">
+            <div className="text-3xl font-light text-gray-900 mb-2">{topUsers?.length || 0}</div>
+            <div className="text-sm text-gray-600 font-medium">Unique Users</div>
+          </div>
+          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200/80">
+            <div className="text-3xl font-light text-gray-900 mb-2">{topRouters?.length || 0}</div>
+            <div className="text-sm text-gray-600 font-medium">Active Points</div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="grid lg:grid-cols-[2fr_1fr] gap-8 mb-12">
+          {/* Data Table */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200/80 flex flex-col">
+            <div className="px-8 py-6 border-b border-gray-100">
+              <h2 className="text-xl font-medium text-gray-900">Recent Activity</h2>
+              <p className="text-sm text-gray-600 mt-1">Latest connection records</p>
+            </div>
+            <div className="flex-1 p-0">
+              <DataTable
+                columns={[
+                  { key: "fecha", header: "Fecha" },
+                  { key: "campaña", header: "Campaña vista" },
+                  { key: "mac", header: "MAC" },
+                  { key: "estacion", header: "Router" },
+                ]}
+                rows={visits}
+              />
+            </div>
+          </div>
+
+          {/* Side Panel */}
+          <div className="flex flex-col gap-5">
+            {/* Top Users */}
+            <div className="bg-white h-[50%] rounded-xl shadow-sm border border-gray-200/80">
+              <div className="px-6 py-5 border-b border-gray-100">
+                <h3 className="text-lg font-medium text-gray-900">Usuarios con más conexiones</h3>
+                <p className="text-sm text-gray-600 mt-1">Top 10</p>
+              </div>
+              <div className="p-2 h-full">
+                <TopList 
+                  items={topUsers}
+                  leftKey="mac"
+                  rightKey="count" 
+                />
+              </div>
+            </div>
+
+            {/* Top Routers */}
+            <div className="bg-white h-[50%] overflow-hidden rounded-xl pb-4 shadow-sm border border-gray-200/80">
+              <div className="px-6 py-5 border-b border-gray-100">
+                <h3 className="text-lg font-medium text-gray-900">Puntos con más conexiones</h3>
+                <p className="text-sm text-gray-600 mt-1">Top 10</p>
+              </div>
+              <div className="p-2 h-full">
+                <TopList 
+                  items={topRouters}
+                  leftKey="estacion"
+                  rightKey="count"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Heatmap */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200/80">
+          <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-medium text-gray-900">Geographic Distribution</h2>
+              <p className="text-sm text-gray-600 mt-1">Connection density map</p>
+            </div>
+            <button 
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-all duration-200"
+              onClick={() => console.log(generalHeatPoints)}
+            >
+              Debug
+            </button>
+          </div>
+          <div className="p-8">
+            <div className="rounded-xl overflow-hidden border border-gray-200">
+              <Heatmap points={mapData} heightClass="h-[60vh]" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
