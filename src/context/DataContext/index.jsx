@@ -1,3 +1,4 @@
+/* eslint react-refresh/only-export-components: "off" */
 import React, { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 
@@ -7,6 +8,8 @@ const DataProvider = ({ children }) => {
   const [users, setUsers] = useState([]);
   const [heatPoint, setHeatPoint] = useState([]);
   const [connectionsCount, setConnectionsCount] = useState(0);
+  const [lastVisits, setLastVisits] = useState([]);
+  const [connectionsByHour, setConnectionsByHour] = useState([]);
 
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -47,6 +50,32 @@ const DataProvider = ({ children }) => {
     }
   };
 
+  const fetchLastVisits = async (mac) => {
+    try {
+      setLastVisits([]);
+      const res = await axios.get(`${API_URL}/api/v2/usuarios/last10/${mac}`);
+      if (res.status === 200) {
+        setLastVisits(Array.isArray(res.data) ? res.data : []);
+      }
+    } catch (err) {
+      console.error("Error fetching last visits:", err);
+      setLastVisits([]);
+    }
+  };
+
+  const fetchConnectionsByHour = async (mac) => {
+    try {
+      setConnectionsByHour([]);
+      const res = await axios.get(`${API_URL}/api/v2/usuarios/connectionsByHour/${mac}`);
+      if (res.status === 200) {
+        setConnectionsByHour(Array.isArray(res.data) ? res.data : []);
+      }
+    } catch (err) {
+      console.error("Error fetching connections by hour:", err);
+      setConnectionsByHour([]);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -59,6 +88,10 @@ const DataProvider = ({ children }) => {
         heatPoint,
         fetchHeatPoint,
         connectionsCount, // 👈 exponemos el total
+        lastVisits,
+        fetchLastVisits,
+        connectionsByHour,
+        fetchConnectionsByHour,
       }}
     >
       {children}
