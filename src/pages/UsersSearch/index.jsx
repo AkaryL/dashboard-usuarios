@@ -4,95 +4,172 @@ import { searchUsers } from "../../lib/api";
 import { DataContext } from "../../context/DataContext";
 import { useNavigate } from "react-router-dom";
 
+function norm(s) {
+  if (s == null) return "";
+  return String(s)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "");
+}
+
+function includesStr(hay, needle) {
+  const H = norm(hay);
+  const N = norm(needle);
+  return H.includes(N);
+}
+
+function digits(s) {
+  return String(s || "").replace(/\D/g, "");
+}
+
+function uniqueByMac(arr) {
+  const seen = new Set();
+  const out = [];
+  for (const x of arr) {
+    const key = (x?.mac || "").toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push(x);
+    }
+  }
+  return out;
+}
+
 export default function UsersSearch() {
-  const [q, setQ] = useState({ mac: "", phone: "", name: "", curp: "", email: "" });
+  // Quitamos CURP como pediste
+  const [q, setQ] = useState({ mac: "", phone: "", name: "", email: "" });
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState([]); // siempre array
+  const [results, setResults] = useState([]); // array final combinado
   const [error, setError] = useState("");
   const nav = useNavigate();
+
+  // usamos users del contexto para filtrado local (coincidencia parcial garantizada)
   const { users } = useContext(DataContext);
 
   const canSearch = useMemo(() => Object.values(q).some((v) => v?.trim()), [q]);
 
+  // Filtro local "contiene" para TODOS los campos
+  const localMatches = useMemo(() => {
+    if (!canSearch) return [];
+    const macQ = q.mac?.trim();
+    const nameQ = q.name?.trim();
+    const emailQ = q.email?.trim();
+    const phoneQ = digits(q.phone);
+
+    let base = Array.isArray(users) ? users : [];
+
+    if (macQ) base = base.filter((u) => includesStr(u.mac, macQ));
+    if (nameQ) base = base.filter((u) => includesStr(u.name, nameQ));
+    if (emailQ) base = base.filter((u) => includesStr(u.email, emailQ));
+    if (phoneQ) base = base.filter((u) => String(u?.phone || "").includes(phoneQ));
+
+    return base;
+  }, [q, users, canSearch]);
+
+  // Disparo al backend + combinación con local (para que nunca pierdas "contiene")
   useEffect(() => {
-    const id = setTimeout(() => {
-      if (!canSearch) { setResults([]); setError(""); return; }
+    const id = setTimeout(async () => {
+      if (!canSearch) {
+        setResults([]);
+        setError("");
+        return;
+      }
 
       setLoading(true);
       setError("");
 
-      searchUsers(q)
-        .then((arr) => {
-          // searchUsers YA devuelve array normalizado
-          setResults(Array.isArray(arr) ? arr : []);
-        })
-        .catch((e) => {
-          console.error("searchUsers error:", e);
-          setError("No se pudo obtener resultados.");
-          setResults([]);
-        })
-        .finally(() => setLoading(false));
+      try {
+        const serverArr = await searchUsers(q);
+        // Afinamos server por si el backend hace exact-match (aplicamos "contiene")
+        let refined = serverArr;
+
+        if (q.mac?.trim()) refined = refined.filter((u) => includesStr(u.mac, q.mac));
+        if (q.name?.trim()) refined = refined.filter((u) => includesStr(u.name, q.name));
+        if (q.email?.trim()) refined = refined.filter((u) => includesStr(u.email, q.email));
+        if (q.phone?.trim()) refined = refined.filter((u) =>
+          String(u?.phone || "").includes(digits(q.phone))
+        );
+
+        // Unimos server (refinado) + local, sin duplicar por mac
+        const combined = uniqueByMac([...refined, ...localMatches]);
+        setResults(combined);
+      } catch (e) {
+        console.error("searchUsers effect error:", e);
+        // Si el servidor falla, aún mostramos lo local
+        setResults(uniqueByMac([...localMatches]));
+        setError("No se pudo consultar el servidor, mostrando coincidencias locales.");
+      } finally {
+        setLoading(false);
+      }
     }, 400); // debounce
 
     return () => clearTimeout(id);
-  }, [q, canSearch]);
+  }, [q, canSearch, localMatches]);
 
   const safeResults = Array.isArray(results) ? results : [];
+
+  const clearFilters = () => {
+    setQ({ mac: "", phone: "", name: "", email: "" });
+    setResults([]);
+    setError("");
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
         {/* Search Form */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200/80 p-4">
-          <div className="mb-4">
-            <h1 className="text-base font-medium text-gray-900">Búsqueda de Usuarios</h1>
-            <p className="text-xs text-gray-600 mt-1">Buscar usuarios por cualquier campo</p>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h1 className="text-base font-medium text-gray-900">Búsqueda de Usuarios</h1>
+              <p className="text-xs text-gray-600 mt-1">
+                Coincidencia en MAC, Teléfono, Nombre o Correo
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="px-3 py-2 text-xs rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+            >
+              Limpiar
+            </button>
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Dirección MAC</label>
-              <input 
-                className="w-full border border-gray-200 rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400" 
-                placeholder="Ingresa MAC" 
-                value={q.mac}     
-                onChange={(e)=>setQ({...q, mac: e.target.value})}
+              <input
+                className="w-full border border-gray-200 rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                placeholder="Ingresa MAC"
+                value={q.mac}
+                onChange={(e) => setQ({ ...q, mac: e.target.value })}
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Teléfono</label>
-              <input 
-                className="w-full border border-gray-200 rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400" 
-                placeholder="Ingresa teléfono" 
-                value={q.phone} 
-                onChange={(e)=>setQ({...q, phone: e.target.value})}
+              <input
+                className="w-full border border-gray-200 rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                placeholder="Ingresa teléfono"
+                value={q.phone}
+                onChange={(e) => setQ({ ...q, phone: e.target.value })}
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Nombre</label>
-              <input 
-                className="w-full border border-gray-200 rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400" 
-                placeholder="Ingresa nombre" 
-                value={q.name}   
-                onChange={(e)=>setQ({...q, name: e.target.value})}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">CURP</label>
-              <input 
-                className="w-full border border-gray-200 rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400" 
-                placeholder="Ingresa CURP" 
-                value={q.curp}     
-                onChange={(e)=>setQ({...q, curp: e.target.value})}
+              <input
+                className="w-full border border-gray-200 rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                placeholder="Ingresa nombre"
+                value={q.name}
+                onChange={(e) => setQ({ ...q, name: e.target.value })}
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Correo</label>
-              <input 
-                className="w-full border border-gray-200 rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400" 
-                placeholder="Ingresa correo" 
-                value={q.email}  
-                onChange={(e)=>setQ({...q, email: e.target.value})}
+              <input
+                className="w-full border border-gray-200 rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                placeholder="Ingresa correo"
+                value={q.email}
+                onChange={(e) => setQ({ ...q, email: e.target.value })}
               />
             </div>
           </div>
@@ -107,7 +184,7 @@ export default function UsersSearch() {
             </div>
           </div>
         )}
-        
+
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
             <div className="text-red-700 text-xs">{error}</div>
@@ -115,17 +192,17 @@ export default function UsersSearch() {
         )}
 
         {/* Results Table */}
-        {users?.length > 0 && (
+        {safeResults.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200/80 overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100">
               <h2 className="text-sm font-medium text-gray-900">Resultados de Búsqueda</h2>
-              <p className="text-xs text-gray-600 mt-1">{users.length} usuarios encontrados</p>
+              <p className="text-xs text-gray-600 mt-1">{safeResults.length} usuarios encontrados</p>
             </div>
 
             {/* Mobile View - Card Layout */}
             <div className="md:hidden">
               <div className="max-h-[400px] overflow-y-auto p-3 space-y-3">
-                {users.map((u, i) => (
+                {safeResults.map((u, i) => (
                   <div key={i} className="bg-gray-50/50 rounded-lg p-3 border border-gray-100">
                     <div className="space-y-2">
                       <div className="flex justify-between items-start">
@@ -177,10 +254,10 @@ export default function UsersSearch() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {users.map((u, i) => (
+                    {safeResults.map((u, i) => (
                       <tr key={i} className="hover:bg-gray-50/50 transition-colors duration-150">
                         <td className="px-4 py-3 text-xs text-gray-600">{u.mac}</td>
-                        <td className="px-4 py-3 text-xs text-gray-600">{u.name || "—"}</td> 
+                        <td className="px-4 py-3 text-xs text-gray-600">{u.name || "—"}</td>
                         <td className="px-4 py-3 text-xs text-gray-600">{u.email || "—"}</td>
                         <td className="px-4 py-3 text-xs text-gray-600">{u.age || "—"}</td>
                         <td className="px-4 py-3 text-xs text-gray-600">{u.phone || "—"}</td>

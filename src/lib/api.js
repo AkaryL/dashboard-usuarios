@@ -1,38 +1,45 @@
+// src/lib/api.js
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
+function normalizeQuery(q = {}) {
+  const clean = {};
+  for (const [k, v] of Object.entries(q)) {
+    const val = typeof v === "string" ? v.trim() : v;
+    if (val !== undefined && val !== null && String(val).trim() !== "") {
+      clean[k] = val;
+    }
+  }
+  return clean;
+}
 
-export const api = axios.create({
-  baseURL: API_URL,
-  timeout: 20000,
-});
+/**
+ * Busca en el backend.
+ * Nota: El backend puede no soportar "contiene" en phone; por eso luego refinamos localmente.
+ */
+export async function searchUsers(q = {}) {
+  const API_URL = import.meta.env.VITE_API_URL;
+  if (!API_URL) throw new Error("VITE_API_URL no está definido en el .env");
 
-// Helpers generales
-export const getLastVisits = () => api.get(`/api/v2/visitas/last100`);
-export const getTopUsers   = () => api.get(`/api/v2/visitas/topUsers`);
-export const getTopRouters = () => api.get(`/api/v2/visitas/topRouters`);
-export const getHeatmapAll = () => api.get(`/api/v2/usuarios/getPoints/all`);
+  const params = normalizeQuery(q);
+  const hasAny = Object.keys(params).length > 0;
+  if (!hasAny) return [];
 
-// Búsqueda de usuarios
-export const searchUsers = (filters) =>
-  api.get(`/api/v2/usuarios/search`, { params: filters }).then((r) => {
-    const d = r?.data;
-    if (Array.isArray(d)) return d;
-    if (Array.isArray(d?.results)) return d.results;
-    if (Array.isArray(d?.items)) return d.items;
-    if (Array.isArray(d?.data)) return d.data;
+  try {
+    const res = await axios.get(`${API_URL}/api/v2/usuarios/search`, {
+      params,
+      timeout: 10000,
+    });
+    const data = Array.isArray(res.data) ? res.data : [];
+    return data.map((u) => ({
+      mac: u?.mac ?? "",
+      name: u?.name ?? "",
+      email: u?.email ?? "",
+      phone: u?.phone ?? "",
+      age: typeof u?.age === "number" ? u.age : (u?.age ? Number(u.age) || "" : ""),
+      ...u,
+    }));
+  } catch (err) {
+    console.error("searchUsers error:", err);
     return [];
-  });
-
-// Endpoints por usuario
-export const getUserOverview = (mac) =>
-  api.get(`/api/v2/usuarios/overview/${encodeURIComponent(mac)}`);
-export const getUserTopRouters = (mac, limit = 5) =>
-  api.get(`/api/v2/usuarios/topRouters/${encodeURIComponent(mac)}`, {
-    params: { limit },
-  });
-export const getUserByHour = (mac) =>
-  api.get(`/api/v2/usuarios/connectionsByHour/${encodeURIComponent(mac)}`);
-export const getHeatmapUser = (mac) =>
-  api.get(`/api/v2/usuarios/getPoints/${encodeURIComponent(mac)}`);
-
+  }
+}
