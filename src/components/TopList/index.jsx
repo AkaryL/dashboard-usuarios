@@ -2,7 +2,7 @@ export function TopList({ title, items = [], leftKey, rightKey }) {
   const safeItems = Array.isArray(items) ? items : [];
 
   return (
-    <div className="bg-white rounded-xl shadow p-4">
+    <div className="bg-white rounded-xl shadow p-4 max-h-[350px] overflow-y-auto">
       <div className="font-medium mb-2">{title}</div>
       <ul className="divide-y">
         {safeItems.length ? safeItems.map((it, idx) => (

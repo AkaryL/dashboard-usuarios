@@ -20,7 +20,7 @@ export default function UserDetail() {
   const {
     users,
     fetchHeatPoint,
-    heatPoint,
+    userHeatPoint,
     connectionsCount,
     fetchLastVisits,
     lastVisits,
@@ -39,13 +39,13 @@ export default function UserDetail() {
 
   useEffect(() => {
     // Formato que espera tu <Heatmap />: [lat, lng, intensity]
-    const points = (heatPoint || []).map((item) => [
+    const points = (userHeatPoint || []).map((item) => [
       item.latitud,
       item.longitud,
       Number(item.count || 0),
     ]);
     setMapData(points);
-  }, [heatPoint]);
+  }, [userHeatPoint]);
 
   const chartData = useMemo(() => {
     const labels = (connectionsByHour || []).map((c) => `${c.hora}:00`);

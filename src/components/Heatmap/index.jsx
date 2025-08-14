@@ -6,7 +6,8 @@ import L from "leaflet";
 
 function HeatLayer({ points }) {
   const map = useMap();
-  const safePoints = Array.isArray(points) ? points : [];
+  console.log(points)
+  const safePoints = points;
 
   useEffect(() => {
     if (!safePoints.length) return;

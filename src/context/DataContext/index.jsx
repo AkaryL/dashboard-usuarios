@@ -5,9 +5,15 @@ import axios from "axios";
 const DataContext = createContext(null);
 
 const DataProvider = ({ children }) => {
+  //Datos generales
+  const [topUsers, setTopUsers] = useState([]);
+  const [topRouters, setTopRouters] = useState([]);
   const [visits, setVisits] = useState([]);
+  const [generalHeatPoints, setGeneralHeatPoints] = useState([]);
+
+  // Datos de Usuario
   const [users, setUsers] = useState([]);
-  const [heatPoint, setHeatPoint] = useState([]);
+  const [userHeatPoint, setUserHeatPoint] = useState([]);
   const [connectionsCount, setConnectionsCount] = useState(0);
   const [lastVisits, setLastVisits] = useState([]);
   const [connectionsByHour, setConnectionsByHour] = useState([]);
@@ -30,13 +36,13 @@ const DataProvider = ({ children }) => {
   const fetchHeatPoint = async (mac) => {
     try {
       // Limpia estados al cambiar de usuario
-      setHeatPoint([]);
+      setUserHeatPoint([]);
       setConnectionsCount(0);
 
       const res = await axios.get(`${API_URL}/api/v2/usuarios/getPoints/${mac}`);
       if (res.status === 200) {
         const data = Array.isArray(res.data) ? res.data : [];
-        setHeatPoint(data);
+        setUserHeatPoint(data);
 
         // ✅ Sumar todos los count (vienen como string)
         const total = data.reduce((sum, item) => sum + Number(item?.count ?? 0), 0);
@@ -46,7 +52,7 @@ const DataProvider = ({ children }) => {
       }
     } catch (err) {
       console.error("Error fetching heatmap data:", err);
-      setHeatPoint([]);
+      setUserHeatPoint([]);
       setConnectionsCount(0);
     }
   };
@@ -89,9 +95,51 @@ const DataProvider = ({ children }) => {
     }
   };
 
+  const fetchTopUsers = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/v2/visitas/topUsers`);
+      if (res.status === 200) {
+        setTopUsers(res.data);
+      }
+    } catch (err) {
+      console.error("Error fetching visits:", err);
+      setVisits([]);
+    }
+  };
+
+  const fetchTopRouters = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/v2/visitas/topRouters`);
+      if (res.status === 200) {
+        setTopRouters(res.data);
+      }
+    } catch (err) {
+      console.error("Error fetching visits:", err);
+      setVisits([]);
+    }
+  };
+
+  const fetchGeneralHeatPoints = async (mac) => {
+    try {
+      // Limpia estados al cambiar de usuario
+      setGeneralHeatPoints([]);
+
+      const res = await axios.get(`${API_URL}/api/v2/visitas/getPoints`);
+      if (res.status === 200) {
+        setGeneralHeatPoints(res.data);
+      }
+    } catch (err) {
+      console.error("Error fetching heatmap data:", err);
+      setGeneralHeatPoints([]);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
     fetchVisits();
+    fetchTopUsers();
+    fetchTopRouters();
+    fetchGeneralHeatPoints();
   }, []);
 
   return (
@@ -99,7 +147,7 @@ const DataProvider = ({ children }) => {
       value={{
         users,
         setUsers,
-        heatPoint,
+        userHeatPoint,
         fetchHeatPoint,
         connectionsCount, // 👈 exponemos el total
         lastVisits,
@@ -107,6 +155,9 @@ const DataProvider = ({ children }) => {
         connectionsByHour,
         fetchConnectionsByHour,
         visits,
+        topUsers,
+        topRouters,
+        generalHeatPoints
       }}
     >
       {children}
