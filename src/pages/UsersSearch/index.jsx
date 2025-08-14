@@ -69,7 +69,7 @@ export default function UsersSearch() {
               {users.map((u, i) => (
                 <tr key={i} className="border-t">
                   <td className="px-3 py-2">{u.mac}</td>
-                  <td className="px-3 py-2">{u.name || "—"}</td>
+                  <td className="px-3 py-2">{u.name || "—"}</td> 
                   <td className="px-3 py-2">{u.email || "—"}</td>
                   <td className="px-3 py-2">{u.age || "—"}</td>
                   <td className="px-3 py-2">{u.phone || "—"}</td>

@@ -10,7 +10,7 @@ const DataProvider = ({ children }) => {
 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  const fetchUsers = async () => {
+  const fetchUsers = async () => {  
     try {
       const res = await axios.get(`${API_URL}/api/v2/usuarios/all`);
       if (res.status === 200) {
