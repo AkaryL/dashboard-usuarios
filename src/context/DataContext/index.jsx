@@ -5,6 +5,7 @@ import axios from "axios";
 const DataContext = createContext(null);
 
 const DataProvider = ({ children }) => {
+  const [visits, setVisits] = useState([]);
   const [users, setUsers] = useState([]);
   const [heatPoint, setHeatPoint] = useState([]);
   const [connectionsCount, setConnectionsCount] = useState(0);
@@ -76,8 +77,21 @@ const DataProvider = ({ children }) => {
     }
   };
 
+  const fetchVisits = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/v2/visitas/last100`);
+      if (res.status === 200) {
+        setVisits(res.data);
+      }
+    } catch (err) {
+      console.error("Error fetching visits:", err);
+      setVisits([]);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchVisits();
   }, []);
 
   return (
@@ -92,6 +106,7 @@ const DataProvider = ({ children }) => {
         fetchLastVisits,
         connectionsByHour,
         fetchConnectionsByHour,
+        visits,
       }}
     >
       {children}
