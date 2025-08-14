@@ -1,3 +1,7 @@
+echo ".env
+.env.*
+!.env.example" >> .gitignore
+
 # Logs
 logs
 *.log
