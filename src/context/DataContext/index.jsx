@@ -25,7 +25,7 @@ const DataProvider = ({ children }) => {
       const res = await axios.get(`${API_URL}/api/v2/usuarios/all`);
       if (res.status === 200) {
         setUsers(Array.isArray(res.data) ? res.data : []);
-        console.log("Usuarios cargados:", res.data?.length ?? 0);
+        // console.log("Usuarios cargados:", res.data?.length ?? 0);
       }
     } catch (err) {
       console.error("Error fetching users:", err);
@@ -48,7 +48,7 @@ const DataProvider = ({ children }) => {
         const total = data.reduce((sum, item) => sum + Number(item?.count ?? 0), 0);
         setConnectionsCount(total);
 
-        console.log("Heatmap data cargada:", data.length, "puntos. Total conexiones:", total);
+        // console.log("Heatmap data cargada:", data.length, "puntos. Total conexiones:", total);
       }
     } catch (err) {
       console.error("Error fetching heatmap data:", err);

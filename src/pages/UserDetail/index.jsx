@@ -168,12 +168,12 @@ export default function UserDetail() {
   const hours = useMemo(() => Array.from({ length: 24 }, (_, h) => h), []);
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
 
         {/* User Info Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200/80 p-4">
-          <div className="text-xs text-gray-600 font-medium mb-3">MAC: {mac}</div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80 p-4">
+          <div className="text-xs text-gray-600 dark:text-gray-300 font-medium mb-3">MAC: {mac}</div>
           <div className="grid md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <div className="grid sm:grid-cols-2 gap-2">
@@ -201,27 +201,27 @@ export default function UserDetail() {
         </div>
 
         {/* NUEVO: Filtros Día / Hora (solo en UserDetail) */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200/80 p-4">
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Filtros</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80 p-4">
+          <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Filtros</h3>
           <div className="grid sm:grid-cols-4 gap-3">
             {/* Día */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-600">Día</label>
+              <label className="text-xs text-gray-600 dark:text-gray-300">Día</label>
               <input
                 type="date"
                 value={filters.date}
                 onChange={(e) => setFilters((f) => ({ ...f, date: e.target.value }))}
-                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-200 dark:border-gray-600 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
 
             {/* Modo hora */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-600">Modo de hora</label>
+              <label className="text-xs text-gray-600 dark:text-gray-300">Modo de hora</label>
               <select
                 value={filters.hourMode}
                 onChange={(e) => setFilters((f) => ({ ...f, hourMode: e.target.value }))}
-                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-200 dark:border-gray-600 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="all">Todas</option>
                 <option value="single">Hora específica</option>
@@ -232,11 +232,11 @@ export default function UserDetail() {
             {/* Hora única */}
             {filters.hourMode === "single" && (
               <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-600">Hora</label>
+                <label className="text-xs text-gray-600 dark:text-gray-300">Hora</label>
                 <select
                   value={filters.hour}
                   onChange={(e) => setFilters((f) => ({ ...f, hour: e.target.value }))}
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-200 dark:border-gray-600 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="">—</option>
                   {hours.map((h) => (
@@ -250,11 +250,11 @@ export default function UserDetail() {
             {filters.hourMode === "range" && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs text-gray-600">Desde</label>
+                  <label className="text-xs text-gray-600 dark:text-gray-300">Desde</label>
                   <select
                     value={filters.hourStart}
                     onChange={(e) => setFilters((f) => ({ ...f, hourStart: e.target.value }))}
-                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-gray-200 dark:border-gray-600 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="">—</option>
                     {hours.map((h) => (
@@ -263,11 +263,11 @@ export default function UserDetail() {
                   </select>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs text-gray-600">Hasta</label>
+                  <label className="text-xs text-gray-600 dark:text-gray-300">Hasta</label>
                   <select
                     value={filters.hourEnd}
                     onChange={(e) => setFilters((f) => ({ ...f, hourEnd: e.target.value }))}
-                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-gray-200 dark:border-gray-600 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="">—</option>
                     {hours.map((h) => (
@@ -286,15 +286,15 @@ export default function UserDetail() {
         </div>
 
         {/* Heatmap */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200/80">
-          <div className="px-4 py-3 border-b border-gray-100">
-            <h2 className="text-base font-medium text-gray-900">User Location Heatmap</h2>
-            <p className="text-xs text-gray-600 mt-1">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80">
+          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+            <h2 className="text-base font-medium text-gray-900 dark:text-white">User Location Heatmap</h2>
+            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
               Geographic distribution of connections{filters.date ? ` — ${filters.date}` : ""}
             </p>
           </div>
           <div className="p-4">
-            <div className="rounded-lg overflow-hidden border border-gray-200">
+            <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
               <Heatmap points={mapData} heightClass="h-[35vh]" />
             </div>
           </div>
@@ -303,10 +303,10 @@ export default function UserDetail() {
         {/* Data Table and Chart */}
         <div className="grid md:grid-cols-2 gap-4">
           {/* Recent Visits */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200/80 flex flex-col">
-            <div className="px-4 py-3 border-b border-gray-100">
-              <h3 className="text-sm font-medium text-gray-900">Recent Visits</h3>
-              <p className="text-xs text-gray-600 mt-1">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80 flex flex-col">
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Recent Visits</h3>
+              <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
                 Last 10 connection records {renderFilterBadge(filters)}
               </p>
             </div>
@@ -324,10 +324,10 @@ export default function UserDetail() {
           </div>
 
           {/* Connections Chart */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200/80">
-            <div className="px-4 py-3 border-b border-gray-100">
-              <h3 className="text-sm font-medium text-gray-900">Hourly Connections</h3>
-              <p className="text-xs text-gray-600 mt-1">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80">
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Hourly Connections</h3>
+              <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
                 Connection activity by hour {filters.date ? `(${filters.date})` : ""}
               </p>
             </div>
@@ -369,8 +369,8 @@ export default function UserDetail() {
 function InfoRow({ label, value }) {
   return (
     <div className="flex items-start gap-2 py-1">
-      <div className="w-32 text-xs text-gray-600 font-medium flex-shrink-0">{label}</div>
-      <div className="text-xs text-gray-900">{value ?? "—"}</div>
+      <div className="w-32 text-xs text-gray-600 dark:text-gray-300 font-medium flex-shrink-0">{label}</div>
+      <div className="text-xs text-gray-900 dark:text-white">{value ?? "—"}</div>
     </div>
   );
 }

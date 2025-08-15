@@ -15,37 +15,37 @@ export default function Home() {
       item.longitud,
       Number(item.count || 0),
     ]);
-    console.log(points);
+    // console.log(points);
     setMapData(points);
   }, [generalHeatPoints]);
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
 
       <div className="max-w-7xl mx-auto px-8 py-8">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200/80">
-            <div className="text-3xl font-light text-gray-900 mb-2">{visits?.length || 0}</div>
-            <div className="text-sm text-gray-600 font-medium">Total Visits</div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-200/80 dark:border-gray-700/80">
+            <div className="text-3xl font-light text-gray-900 dark:text-white mb-2">{visits?.length || 0}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">Total Visits</div>
           </div>
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200/80">
-            <div className="text-3xl font-light text-gray-900 mb-2">{topUsers?.length || 0}</div>
-            <div className="text-sm text-gray-600 font-medium">Unique Users</div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-200/80 dark:border-gray-700/80">
+            <div className="text-3xl font-light text-gray-900 dark:text-white mb-2">{topUsers?.length || 0}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">Unique Users</div>
           </div>
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200/80">
-            <div className="text-3xl font-light text-gray-900 mb-2">{topRouters?.length || 0}</div>
-            <div className="text-sm text-gray-600 font-medium">Active Points</div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-200/80 dark:border-gray-700/80">
+            <div className="text-3xl font-light text-gray-900 dark:text-white mb-2">{topRouters?.length || 0}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">Active Points</div>
           </div>
         </div>
 
         {/* Main Content */}
         <div className="grid lg:grid-cols-[2fr_1fr] gap-8 mb-12">
           {/* Data Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200/80 flex flex-col">
-            <div className="px-8 py-6 border-b border-gray-100">
-              <h2 className="text-xl font-medium text-gray-900">Recent Activity</h2>
-              <p className="text-sm text-gray-600 mt-1">Latest connection records</p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200/80 dark:border-gray-700/80 flex flex-col">
+            <div className="px-8 py-6 border-b border-gray-100 dark:border-gray-700">
+              <h2 className="text-xl font-medium text-gray-900 dark:text-white">Recent Activity</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Latest connection records</p>
             </div>
             <div className="flex-1 p-0">
               <DataTable
@@ -63,10 +63,10 @@ export default function Home() {
           {/* Side Panel */}
           <div className="flex flex-col gap-5">
             {/* Top Users */}
-            <div className="bg-white h-[50%] rounded-xl shadow-sm border border-gray-200/80">
-              <div className="px-6 py-5 border-b border-gray-100">
-                <h3 className="text-lg font-medium text-gray-900">Usuarios con más conexiones</h3>
-                <p className="text-sm text-gray-600 mt-1">Top 10</p>
+            <div className="bg-white dark:bg-gray-800 h-[50%] rounded-xl shadow-sm border border-gray-200/80 dark:border-gray-700/80">
+              <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-700">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Usuarios con más conexiones</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Top 10</p>
               </div>
               <div className="p-2 h-full">
                 <TopList 
@@ -78,10 +78,10 @@ export default function Home() {
             </div>
 
             {/* Top Routers */}
-            <div className="bg-white h-[50%] overflow-hidden rounded-xl pb-4 shadow-sm border border-gray-200/80">
-              <div className="px-6 py-5 border-b border-gray-100">
-                <h3 className="text-lg font-medium text-gray-900">Puntos con más conexiones</h3>
-                <p className="text-sm text-gray-600 mt-1">Top 10</p>
+            <div className="bg-white dark:bg-gray-800 h-[50%] overflow-hidden rounded-xl pb-4 shadow-sm border border-gray-200/80 dark:border-gray-700/80">
+              <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-700">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Puntos con más conexiones</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Top 10</p>
               </div>
               <div className="p-2 h-full">
                 <TopList 
@@ -95,21 +95,21 @@ export default function Home() {
         </div>
 
         {/* Heatmap */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200/80">
-          <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200/80 dark:border-gray-700/80">
+          <div className="px-8 py-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-medium text-gray-900">Geographic Distribution</h2>
-              <p className="text-sm text-gray-600 mt-1">Connection density map</p>
+              <h2 className="text-xl font-medium text-gray-900 dark:text-white">Geographic Distribution</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Connection density map</p>
             </div>
             <button 
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-all duration-200"
-              onClick={() => console.log(generalHeatPoints)}
+              className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
+              // onClick={() => console.log(generalHeatPoints)}
             >
               Debug
             </button>
           </div>
           <div className="p-8">
-            <div className="rounded-xl overflow-hidden border border-gray-200">
+            <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
               <Heatmap points={mapData} heightClass="h-[60vh]" />
             </div>
           </div>
