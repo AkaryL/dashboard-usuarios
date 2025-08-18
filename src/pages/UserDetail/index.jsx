@@ -288,9 +288,9 @@ export default function UserDetail() {
         {/* Heatmap */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80">
           <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-            <h2 className="text-base font-medium text-gray-900 dark:text-white">User Location Heatmap</h2>
+            <h2 className="text-base font-medium text-gray-900 dark:text-white">Mapa de calor de ubicación del usuario</h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
-              Geographic distribution of connections{filters.date ? ` — ${filters.date}` : ""}
+              Distribución geográfica de conexiones{filters.date ? ` — ${filters.date}` : ""}
             </p>
           </div>
           <div className="p-4">
@@ -305,9 +305,11 @@ export default function UserDetail() {
           {/* Recent Visits */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80 flex flex-col">
             <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Recent Visits</h3>
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                Visitas recientes
+              </h3>
               <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
-                Last 10 connection records {renderFilterBadge(filters)}
+                Últimos 10 registros de conexión {renderFilterBadge(filters)}
               </p>
             </div>
             <div className="flex-1">
@@ -326,9 +328,9 @@ export default function UserDetail() {
           {/* Connections Chart */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80">
             <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Hourly Connections</h3>
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Conexiones por horas</h3>
               <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
-                Connection activity by hour {filters.date ? `(${filters.date})` : ""}
+                Actividad de conexión por hora {filters.date ? `(${filters.date})` : ""}
               </p>
             </div>
             <div className="p-4">

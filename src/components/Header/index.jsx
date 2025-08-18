@@ -13,7 +13,7 @@ export default function Header() {
           to="/" 
           className="text-lg font-light text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
         >
-          Analytics Dashboard
+          Dashboard Usuario
         </Link>
         <nav className="flex justify-center items-center gap-2">
           <NavLink 
@@ -21,13 +21,13 @@ export default function Header() {
             end 
             className={({isActive}) => `${base} ${isActive ? active : inactive}`}
           >
-            Home
+            Inicio
           </NavLink>
           <NavLink 
             to="/usuarios" 
             className={({isActive}) => `${base} ${isActive ? active : inactive}`}
           >
-            User Details
+            Detalles de usuarios
           </NavLink>
           <ThemeToggle />
         </nav>

@@ -27,15 +27,15 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-200/80 dark:border-gray-700/80">
             <div className="text-3xl font-light text-gray-900 dark:text-white mb-2">{visits?.length || 0}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">Total Visits</div>
+            <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">Total de Visitas</div>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-200/80 dark:border-gray-700/80">
             <div className="text-3xl font-light text-gray-900 dark:text-white mb-2">{topUsers?.length || 0}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">Unique Users</div>
+            <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">Usuarios Únicos</div>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-200/80 dark:border-gray-700/80">
             <div className="text-3xl font-light text-gray-900 dark:text-white mb-2">{topRouters?.length || 0}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">Active Points</div>
+            <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">Puntos Activos</div>
           </div>
         </div>
 
@@ -44,8 +44,8 @@ export default function Home() {
           {/* Data Table */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200/80 dark:border-gray-700/80 flex flex-col">
             <div className="px-8 py-6 border-b border-gray-100 dark:border-gray-700">
-              <h2 className="text-xl font-medium text-gray-900 dark:text-white">Recent Activity</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Latest connection records</p>
+              <h2 className="text-xl font-medium text-gray-900 dark:text-white">Actividad Reciente</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Últimos registros de conexión</p>
             </div>
             <div className="flex-1 p-0">
               <DataTable
@@ -98,15 +98,9 @@ export default function Home() {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200/80 dark:border-gray-700/80">
           <div className="px-8 py-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-medium text-gray-900 dark:text-white">Geographic Distribution</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Connection density map</p>
+              <h2 className="text-xl font-medium text-gray-900 dark:text-white">Distribución Geográfica</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Mapa de densidad de conexiones</p>
             </div>
-            <button 
-              className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
-              // onClick={() => console.log(generalHeatPoints)}
-            >
-              Debug
-            </button>
           </div>
           <div className="p-8">
             <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
