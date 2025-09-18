@@ -1,9 +1,12 @@
+// src/pages/UserDetail/UserDetail.jsx
 import { useEffect, useState, useContext, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { StatCard } from "../../components/StatCard";
 import Heatmap from "../../components/Heatmap";
 import { DataContext } from "../../context/DataContext";
 import DataTable2 from "../../components/DataTable2";
+import { searchUsers } from "../../lib/api";
+
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -15,10 +18,46 @@ import {
 } from "chart.js";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
+// Utilidad: obtener la “mac” sin importar cómo venga del backend
+function getUserMac(u = {}) {
+  return u?.mac || u?.mac_address || u?.fingerprint || "";
+}
+
+// Helpers UI
+function InfoRow({ label, value }) {
+  return (
+    <div className="flex items-start gap-2 py-1">
+      <div className="w-32 text-xs text-gray-600 dark:text-gray-300 font-medium flex-shrink-0">{label}</div>
+      <div className="text-xs text-gray-900 dark:text-white">{value ?? "—"}</div>
+    </div>
+  );
+}
+function formatDate(v) {
+  if (!v) return "—";
+  const d = new Date(v);
+  return d.toLocaleString();
+}
+function renderFilterBadge(filters) {
+  const pieces = [];
+  if (filters.date) pieces.push(filters.date);
+  if (filters.hourMode === "single" && filters.hour !== "") {
+    pieces.push(`${String(filters.hour).padStart(2, "0")}:00`);
+  } else if (filters.hourMode === "range" && filters.hourStart !== "" && filters.hourEnd !== "") {
+    const a = String(Math.min(Number(filters.hourStart), Number(filters.hourEnd))).padStart(2, "0");
+    const b = String(Math.max(Number(filters.hourStart), Number(filters.hourEnd))).padStart(2, "0");
+    pieces.push(`${a}:00–${b}:59`);
+  }
+  if (!pieces.length) return "";
+  return `— ${pieces.join(" · ")}`;
+}
+
 export default function UserDetail() {
   const { mac } = useParams();
+  const macParam = decodeURIComponent(mac || ""); // corrige %3A
+
   const {
     users,
+    setUsers,                 // cachearemos el usuario buscado
     fetchHeatPoint,
     userHeatPoint,
     connectionsCount,
@@ -29,7 +68,7 @@ export default function UserDetail() {
   } = useContext(DataContext);
 
   // -----------------------
-  // NUEVO: Filtros (día y hora)
+  // Filtros (día y hora)
   // -----------------------
   const [filters, setFilters] = useState({
     date: "",           // YYYY-MM-DD
@@ -42,45 +81,64 @@ export default function UserDetail() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [mapData, setMapData] = useState([]);
 
-  // Cargar datos base (como antes)
+  // Cargar usuario (cache -> /search fallback) y data derivada
   useEffect(() => {
-    setSelectedUser(users.find((u) => u.mac === mac));
-    fetchHeatPoint(mac);
-    fetchLastVisits(mac);
-    // Llamo con "date" por si tu DataContext ya lo soporta; si lo ignora, no pasa nada.
-    fetchConnectionsByHour(mac, { date: filters.date });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [users, mac]);
+    if (!macParam) return;
 
-  // Reconsultar horas cuando cambie el día (sin romper si se ignora el segundo parámetro)
-  useEffect(() => {
-    if (!mac) return;
-    fetchConnectionsByHour(mac, { date: filters.date });
+    // 1) intenta encontrarlo en el cache `users`
+    const cached = users.find(u => getUserMac(u) === macParam) || null;
+    if (cached) {
+      setSelectedUser(cached);
+    } else {
+      // 2) no está: búscalo en el backend usando tu helper searchUsers
+      (async () => {
+        let arr = await searchUsers({ mac: macParam });
+        if (!arr?.length) arr = await searchUsers({ mac_address: macParam });
+        if (!arr?.length) arr = await searchUsers({ fingerprint: macParam });
+        const u = arr?.[0] || null;
+        if (u) {
+          setSelectedUser(u);
+          // cachea para futuras visitas
+          setUsers(prev => {
+            const exists = prev.some(x => getUserMac(x) === getUserMac(u));
+            return exists ? prev.map(x => (getUserMac(x) === getUserMac(u) ? { ...x, ...u } : x)) : [...prev, u];
+          });
+        }
+      })();
+    }
+
+    // Carga derivada del usuario (estas ya funcionaban con la MAC de la URL)
+    fetchHeatPoint(macParam);
+    fetchLastVisits(macParam);
+    // si tu backend no acepta el 2° arg, simplemente lo ignorará
+    fetchConnectionsByHour(macParam, { date: filters.date });
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.date, mac]);
+  }, [users, macParam]);
+
+  // Reconsultar horas cuando cambie el día
+  useEffect(() => {
+    if (!macParam) return;
+    fetchConnectionsByHour(macParam, { date: filters.date });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.date, macParam]);
 
   // Helpers de fecha/hora
   function ymd(dateObj) {
-    // YYYY-MM-DD del Date
     const y = dateObj.getFullYear();
     const m = String(dateObj.getMonth() + 1).padStart(2, "0");
     const d = String(dateObj.getDate()).padStart(2, "0");
     return `${y}-${m}-${d}`;
   }
-
   function passesDateHourFilter(fechaStr) {
-    // fechaStr viene de lastVisits.fecha
     if (!fechaStr) return false;
     const d = new Date(fechaStr);
     if (Number.isNaN(d.getTime())) return false;
 
-    // Filtro por día
     if (filters.date) {
       const rowYmd = ymd(d);
       if (rowYmd !== filters.date) return false;
     }
-
-    // Filtro por hora
     const h = d.getHours();
     if (filters.hourMode === "single" && filters.hour !== "") {
       if (h !== Number(filters.hour)) return false;
@@ -95,35 +153,29 @@ export default function UserDetail() {
       const hi = Math.max(start, end);
       if (h < lo || h > hi) return false;
     }
-
     return true;
   }
 
-  // Filtrado de visitas para tabla (en cliente, SIN tocar APIs)
+  // Filtrado de visitas (cliente)
   const filteredVisits = useMemo(() => {
     if (!Array.isArray(lastVisits)) return [];
-    // Si NO hay ningún filtro activo, regreso tal cual
     const noDay = !filters.date;
     const noHour =
       filters.hourMode === "all" ||
       (filters.hourMode === "single" && filters.hour === "") ||
       (filters.hourMode === "range" && (filters.hourStart === "" || filters.hourEnd === ""));
-
     if (noDay && noHour) return lastVisits;
-
     return lastVisits.filter((row) => passesDateHourFilter(row?.fecha));
   }, [lastVisits, filters]);
 
-  // Para el heatmap: si hay filtro activo, mostramos solo puntos cuyos routers
-  // aparezcan en las visitas filtradas. Si no hay filtros, mostramos todo igual que antes.
+  // Heatmap: restringir a routers de las visitas filtradas si hay filtros
   const filteredHeatRouters = useMemo(() => {
     const noDay = !filters.date;
     const noHour =
       filters.hourMode === "all" ||
       (filters.hourMode === "single" && filters.hour === "") ||
       (filters.hourMode === "range" && (filters.hourStart === "" || filters.hourEnd === ""));
-
-    if (noDay && noHour) return null; // sin filtro -> no restringir
+    if (noDay && noHour) return null;
     const s = new Set(
       filteredVisits
         .map((r) => r?.router_mac)
@@ -133,11 +185,9 @@ export default function UserDetail() {
   }, [filteredVisits, filters]);
 
   useEffect(() => {
-    // Formato que espera <Heatmap />: [lat, lng, intensity]
-    // Si hay routers filtrados, solo incluimos esos; si no, incluimos todos
     const points = (userHeatPoint || [])
       .filter((item) => {
-        if (!filteredHeatRouters) return true; // sin filtro -> todos
+        if (!filteredHeatRouters) return true;
         const rm = item?.router_mac;
         return rm && filteredHeatRouters.has(rm);
       })
@@ -149,7 +199,7 @@ export default function UserDetail() {
     setMapData(points);
   }, [userHeatPoint, filteredHeatRouters]);
 
-  // Chart data igual que antes (se actualizará si connectionsByHour cambia al cambiar el día)
+  // Chart data
   const chartData = useMemo(() => {
     const labels = (connectionsByHour || []).map((c) => `${c.hora}:00`);
     const data = (connectionsByHour || []).map((c) => Number(c.total_conexiones || 0));
@@ -173,7 +223,9 @@ export default function UserDetail() {
 
         {/* User Info Card */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80 p-4">
-          <div className="text-xs text-gray-600 dark:text-gray-300 font-medium mb-3">MAC: {mac}</div>
+          <div className="text-xs text-gray-600 dark:text-gray-300 font-medium mb-3">
+            MAC: {getUserMac(selectedUser) || macParam}
+          </div>
           <div className="grid md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <div className="grid sm:grid-cols-2 gap-2">
@@ -200,7 +252,7 @@ export default function UserDetail() {
           </div>
         </div>
 
-        {/* NUEVO: Filtros Día / Hora (solo en UserDetail) */}
+        {/* Filtros Día / Hora */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80 p-4">
           <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Filtros</h3>
           <div className="grid sm:grid-cols-4 gap-3">
@@ -278,11 +330,6 @@ export default function UserDetail() {
               </div>
             )}
           </div>
-          {/* Tips pequeños */}
-          {/* <p className="mt-2 text-[11px] text-gray-500">
-            La tabla se filtra en cliente por día/hora. El heatmap se restringe a routers vistos en ese período. 
-            El gráfico por hora vuelve a consultar si cambias el día (si tu backend acepta <code>?date=</code>).
-          </p> */}
         </div>
 
         {/* Heatmap */}
@@ -340,9 +387,7 @@ export default function UserDetail() {
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                      legend: { display: false }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
                       y: {
                         beginAtZero: true,
@@ -363,36 +408,4 @@ export default function UserDetail() {
       </div>
     </div>
   );
-}
-
-// -----------------------
-// Helpers UI
-// -----------------------
-function InfoRow({ label, value }) {
-  return (
-    <div className="flex items-start gap-2 py-1">
-      <div className="w-32 text-xs text-gray-600 dark:text-gray-300 font-medium flex-shrink-0">{label}</div>
-      <div className="text-xs text-gray-900 dark:text-white">{value ?? "—"}</div>
-    </div>
-  );
-}
-
-function formatDate(v) {
-  if (!v) return "—";
-  const d = new Date(v);
-  return d.toLocaleString();
-}
-
-function renderFilterBadge(filters) {
-  const pieces = [];
-  if (filters.date) pieces.push(filters.date);
-  if (filters.hourMode === "single" && filters.hour !== "") {
-    pieces.push(`${String(filters.hour).padStart(2, "0")}:00`);
-  } else if (filters.hourMode === "range" && filters.hourStart !== "" && filters.hourEnd !== "") {
-    const a = String(Math.min(Number(filters.hourStart), Number(filters.hourEnd))).padStart(2, "0");
-    const b = String(Math.max(Number(filters.hourStart), Number(filters.hourEnd))).padStart(2, "0");
-    pieces.push(`${a}:00–${b}:59`);
-  }
-  if (!pieces.length) return "";
-  return `— ${pieces.join(" · ")}`;
 }
