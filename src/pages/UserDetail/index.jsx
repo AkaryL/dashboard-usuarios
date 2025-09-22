@@ -6,6 +6,7 @@ import Heatmap from "../../components/Heatmap";
 import { DataContext } from "../../context/DataContext";
 import DataTable2 from "../../components/DataTable2";
 import { searchUsers } from "../../lib/api";
+import axios from "axios";
 
 import { Bar } from "react-chartjs-2";
 import {
@@ -27,7 +28,7 @@ function getUserMac(u = {}) {
 function InfoRow({ label, value }) {
   return (
     <div className="flex items-start gap-2 py-1">
-      <div className="w-32 text-xs text-gray-600 dark:text-gray-300 font-medium flex-shrink-0">{label}</div>
+      <div className="w-32 text-xs text-gray-600 dark:text-green-300 font-medium flex-shrink-0">{label}</div>
       <div className="text-xs text-gray-900 dark:text-white">{value ?? "—"}</div>
     </div>
   );
@@ -51,9 +52,27 @@ function renderFilterBadge(filters) {
   return `— ${pieces.join(" · ")}`;
 }
 
+// Badge de estatus documento
+function StatusBadge({ status = "verificado" }) {
+  const map = {
+    verificado: "bg-green-100 text-green-700 border-green-200",
+    pendiente: "bg-amber-100 text-amber-700 border-amber-200",
+    rechazado: "bg-red-100 text-red-700 border-red-200",
+  };
+  const cls = map[status] || map.verificado;
+  const label =
+    status === "verificado" ? "Verificado" : status === "pendiente" ? "Pendiente" : "Rechazado";
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border ${cls}`}>
+      <span className="text-[12px] leading-none">✓</span>{label}
+    </span>
+  );
+}
+
 export default function UserDetail() {
   const { mac } = useParams();
   const macParam = decodeURIComponent(mac || ""); // corrige %3A
+  const [ riskLevel, setRiskLevel ] = useState("Bajo");
 
   const {
     users,
@@ -66,6 +85,11 @@ export default function UserDetail() {
     fetchConnectionsByHour,
     connectionsByHour,
   } = useContext(DataContext);
+
+  // -----------------------
+  // Tabs (Detalles / Documentos)
+  // -----------------------
+  const [activeTab, setActiveTab] = useState("detalles"); // 'detalles' | 'documentos'
 
   // -----------------------
   // Filtros (día y hora)
@@ -184,6 +208,21 @@ export default function UserDetail() {
     return s;
   }, [filteredVisits, filters]);
 
+  const markRiskLevel = async (level, mac) => {
+    try {
+      const response = await axios.put(`${import.meta.env.VITE_API_URL}/api/v2/usuarios/markRisk/${mac}`, { risk: level });
+      if (response.status === 200) {
+        setSelectedUser(prev => ({ ...prev, risk_level: level }));
+        // Actualiza también en el cache global
+        setUsers(prev => prev.map(u => (getUserMac(u) === getUserMac(selectedUser) ? { ...u, risk_level: level } : u)));
+      } else {
+        console.error("Failed to mark risk level:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error marking risk level:", error);
+    }
+  };
+
   useEffect(() => {
     const points = (userHeatPoint || [])
       .filter((item) => {
@@ -217,40 +256,143 @@ export default function UserDetail() {
 
   const hours = useMemo(() => Array.from({ length: 24 }, (_, h) => h), []);
 
+  // Documentos: actualizado con tus cambios
+  const documents = useMemo(() => ([
+    { name: "INE / ID oficial", status: "verificado" },
+    { name: "Comprobante de domicilio", status: "pendiente" },                   // <- Pendiente
+    { name: "Acta de nacimiento", status: "verificado" },
+    { name: "Antecedentes", status: "verificado", meta: "2 registros" },         // <- 2 registros
+    { name: "Fotografías", status: "verificado", meta: "12 imágenes" },          // <- 12 imágenes
+    { name: "Videos", status: "verificado", meta: "3 grabaciones" },             // <- 3 grabaciones
+  ]), [selectedUser]);
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
 
-        {/* User Info Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80 p-4">
-          <div className="text-xs text-gray-600 dark:text-gray-300 font-medium mb-3">
-            MAC: {getUserMac(selectedUser) || macParam}
+        {/* ===== TABS (aquí, arriba del User Info Card) ===== */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80">
+          <div className="flex items-center gap-2 px-2 pt-2">
+            {[
+              { id: "detalles", label: "Detalles" },
+              { id: "documentos", label: "Documentos" },
+            ].map(t => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                className={`relative px-4 py-2 text-xs font-medium rounded-t-lg transition
+                ${activeTab === t.id
+                    ? "bg-white dark:bg-gray-800 text-blue-800 dark:text-blue-300"
+                    : "text-gray-600 dark:text-gray-300 hover:text-gray-900 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                }`}
+              >
+                {t.label}
+                {activeTab === t.id && (
+                  <span className="absolute left-0 right-0 -bottom-px h-[2px] bg-blue-800 dark:bg-blue-400" />
+                )}
+              </button>
+            ))}
           </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
-              <div className="grid sm:grid-cols-2 gap-2">
-                <InfoRow label="Nombre" value={selectedUser?.name} />
-                <InfoRow label="Email" value={selectedUser?.email} />
-                <InfoRow label="Teléfono" value={selectedUser?.phone} />
-                <InfoRow label="User agent" value={selectedUser?.user_agent} />
-                <InfoRow label="Instagram" value={selectedUser?.instagram} />
-                <InfoRow label="Facebook" value={selectedUser?.facebook} />
-                <InfoRow label="Twitter" value={selectedUser?.twitter} />
-                <InfoRow label="Género" value={selectedUser?.gender} />
-                <InfoRow label="Edad" value={selectedUser?.age} />
-                <InfoRow label="Municipio" value={selectedUser?.municipality} />
-                <InfoRow label="Lenguaje" value={selectedUser?.language} />
-                <InfoRow label="Nivel académico" value={selectedUser?.academic_level} />
-                <InfoRow label="Nivel socioeconómico" value={selectedUser?.socioeconomic_level} />
+
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+            {/* ===== CONTENIDO: DETALLES ===== */}
+            {activeTab === "detalles" && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80 p-4">
+                <div className="text-xs text-gray-600 dark:text-gray-300 font-medium mb-3 flex justify-between">
+                  <div className="text-green-400">MAC: {getUserMac(selectedUser) || macParam}</div>
+                  <div className="flex gap-2 sm:gap-4 flex-wrap">
+                    <button className="px-3 py-2 bg-green-800/20 border-green-800 border text-white text-xs rounded hover:bg-blue-700" onClick={() => window.print()}>
+                      Generar Reporte
+                    </button>
+                    <label htmlFor="risk" className="text-xs text-gray-600 dark:text-gray-300 self-center">Nivel de riesgo:</label>
+                    <select
+                      id="risk"
+                      value={riskLevel}
+                      onChange={(e) => setRiskLevel(e.target.value)}
+                      className="px-2 py-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-xs rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                      <option value="Bajo">Bajo</option>
+                      <option value="Medio">Medio</option>
+                      <option value="Alto">Alto</option>
+                    </select>
+                    <button
+                      className="px-3 py-2 bg-red-700/30 border-red-700 border text-white text-xs rounded hover:bg-red-800"
+                      onClick={() => selectedUser && markRiskLevel(riskLevel, getUserMac(selectedUser))}
+                    >
+                      Marcar como riesgo
+                    </button>
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="md:col-span-2">
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      <InfoRow label="Nombre" value={selectedUser?.name} />
+                      <InfoRow label="Email" value={selectedUser?.email} />
+                      <InfoRow label="Teléfono" value={selectedUser?.phone} />
+                      <InfoRow label="User agent" value={selectedUser?.user_agent} />
+                      <InfoRow label="Instagram" value={selectedUser?.instagram} />
+                      <InfoRow label="Facebook" value={selectedUser?.facebook} />
+                      <InfoRow label="Twitter" value={selectedUser?.twitter} />
+                      <InfoRow label="Género" value={selectedUser?.gender} />
+                      <InfoRow label="Edad" value={selectedUser?.age} />
+                      <InfoRow label="Municipio" value={selectedUser?.municipality} />
+                      <InfoRow label="Lenguaje" value={selectedUser?.language} />
+                      <InfoRow label="Nivel académico" value={selectedUser?.academic_level} />
+                      <InfoRow label="Nivel de riesgo" value={selectedUser?.risk_level} />
+                      <InfoRow label="Nivel socioeconómico" value={selectedUser?.socioeconomic_level} />
+                    </div>
+                  </div>
+                  <div className="grid gap-3">
+                    <StatCard title="Primera conexión" value={formatDate(selectedUser?.createdat)} />
+                    <StatCard title="Última conexión" value={formatDate(selectedUser?.updatedat)} />
+                    <StatCard title="Número de conexiones" value={connectionsCount} />
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="grid gap-3">
-              <StatCard title="Primera conexión" value={formatDate(selectedUser?.createdat)} />
-              <StatCard title="Última conexión" value={formatDate(selectedUser?.updatedat)} />
-              <StatCard title="Número de conexiones" value={connectionsCount} />
-            </div>
+            )}
+
+            {/* ===== CONTENIDO: DOCUMENTOS ===== */}
+            {activeTab === "documentos" && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80">
+                <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-white">Documentos del usuario</h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">Estado de verificación de identidad</p>
+                </div>
+                <div className="p-4">
+                  <ul className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {documents.map((doc) => (
+                      <li key={doc.name} className="py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="h-7 w-7 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-300 text-xs font-bold">
+                            {doc.name.slice(0,1).toUpperCase()}
+                          </span>
+                          <div>
+                            <p className="text-sm text-gray-900 dark:text-white">{doc.name}</p>
+                            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                              {doc.meta ?? "Documento oficial"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <StatusBadge status={doc.status} />
+                          {/* Botón "Ver" listo para conectar a doc.url si lo tienes
+                          <button
+                            className="text-xs px-3 py-1.5 rounded border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            onClick={() => doc.url ? window.open(doc.url, "_blank") : alert(`Abrir ${doc.name}`)}
+                          >
+                            Ver
+                          </button>
+                          */}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+        {/* ===== FIN TABS ===== */}
 
         {/* Filtros Día / Hora */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80 p-4">
