@@ -30,7 +30,7 @@ const DataProvider = ({ children }) => {
     } catch (err) {
       console.error("Error fetching users:", err);
       setUsers([]);
-    }
+    } 
   };
 
   const fetchHeatPoint = async (mac) => {
