@@ -3,9 +3,10 @@ import { DataContext } from "../../context/DataContext";
 import DataTable from "../../components/DataTable";
 import { TopList } from "../../components/TopList";
 import Heatmap from "../../components/Heatmap";
+import { RiSketching } from "react-icons/ri";
 
 export default function Home() {
-  const { visits, topUsers, topRouters, generalHeatPoints } = useContext(DataContext);
+  const { visits, topUsers, topRouters, generalHeatPoints, riskUsers } = useContext(DataContext);
   const [mapData, setMapData] = useState([]);
 
   useEffect(() => {
@@ -72,7 +73,26 @@ export default function Home() {
                 <TopList 
                   items={topUsers}
                   leftKey="mac"
-                  rightKey="count" 
+                  rightKey="count"
+                  name="name"
+                  risk="riesgo"
+                  user
+                />
+              </div>
+            </div>
+
+            {/* Top Users */}
+            <div className="bg-white dark:bg-gray-800 h-[50%] rounded-xl shadow-sm border border-gray-200/80 dark:border-gray-700/80">
+              <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-700">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Usuarios de Alto Riesgo</h3>
+              </div>
+              <div className="p-2 h-full">
+                <TopList 
+                  items={riskUsers}
+                  leftKey="mac"
+                  name="name"
+                  risk="riesgo"
+                  user
                 />
               </div>
             </div>

@@ -10,6 +10,7 @@ const DataProvider = ({ children }) => {
   const [topRouters, setTopRouters] = useState([]);
   const [visits, setVisits] = useState([]);
   const [generalHeatPoints, setGeneralHeatPoints] = useState([]);
+  const [riskUsers, setRiskUsers] = useState([]);
 
   // Datos de Usuario
   const [users, setUsers] = useState([]);
@@ -17,6 +18,7 @@ const DataProvider = ({ children }) => {
   const [connectionsCount, setConnectionsCount] = useState(0);
   const [lastVisits, setLastVisits] = useState([]);
   const [connectionsByHour, setConnectionsByHour] = useState([]);
+  const [firstAndLastSeen, setFirstAndLastSeen] = useState(null);
 
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -31,6 +33,20 @@ const DataProvider = ({ children }) => {
       console.error("Error fetching users:", err);
       setUsers([]);
     } 
+  };
+
+  const fetchRiskUsers = async () => {  
+    try {
+      const res = await axios.get(`${API_URL}/api/v2/visitas/getRiskyUsers`);
+      console.log(res);
+      if (res.status === 200) {
+        setRiskUsers(Array.isArray(res.data) ? res.data : []);
+        // console.log("Usuarios de riesgo cargados:", res.data?.length ?? 0);
+      }
+    } catch (err) {
+      console.error("Error fetching risk users:", err);
+      setRiskUsers([]);
+    }
   };
 
   const fetchHeatPoint = async (mac) => {
@@ -134,8 +150,21 @@ const DataProvider = ({ children }) => {
     }
   };
 
+  const fetchFirstAndLastSeen = async (mac) => {
+    try {
+      const res = await axios.get(`${API_URL}/api/v2/usuarios/firstAndLastSeen/${mac}`);
+      if (res.status === 200) {
+        setFirstAndLastSeen(res.data);
+      }
+    } catch (err) {
+      console.error("Error fetching first and last seen:", err);
+      setFirstAndLastSeen(null);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchRiskUsers();
     fetchVisits();
     fetchTopUsers();
     fetchTopRouters();
@@ -154,10 +183,14 @@ const DataProvider = ({ children }) => {
         fetchLastVisits,
         connectionsByHour,
         fetchConnectionsByHour,
+        riskUsers,
+        fetchRiskUsers,
         visits,
         topUsers,
         topRouters,
-        generalHeatPoints
+        generalHeatPoints,
+        firstAndLastSeen,
+        fetchFirstAndLastSeen,
       }}
     >
       {children}

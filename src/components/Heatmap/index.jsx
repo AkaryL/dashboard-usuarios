@@ -10,40 +10,54 @@ function HeatLayer({ points }) {
   useEffect(() => {
     if (!Array.isArray(points) || points.length === 0) return;
 
-    // ✅ Filtrar puntos inválidos y normalizar
+    // ✅ Filtrar y procesar puntos
     const safePoints = points
-      .filter((p) => Array.isArray(p) && p.length >= 2) // que tenga al menos lat y lng
+      .filter((p) => Array.isArray(p) && p.length >= 2)
       .map(([lat, lng, intensity]) => {
         const latNum = Number(lat);
         const lngNum = Number(lng);
-        if (isNaN(latNum) || isNaN(lngNum)) return null; // descartar si no son válidos
+        if (isNaN(latNum) || isNaN(lngNum)) return null;
         
-        let intensityNum = Number(intensity) || 0;
-        
-        // 🔥 BOOST para intensidades >= 5: multiplicar por 2-3x
-        if (intensityNum >= 5) {
-          intensityNum = intensityNum * 2.5; // Ajusta este multiplicador según prefieras
-        }
-        
-        return [latNum, lngNum, intensityNum];
+        return [latNum, lngNum, Number(intensity) || 1];
       })
-      .filter(Boolean); // quitar nulls
+      .filter(Boolean);
 
     if (safePoints.length === 0) return;
 
-    const heat = L.heatLayer(safePoints, {
-      radius: 30,        // Aumentado de 25 a 30 para mayor visibilidad
-      blur: 15,          // Aumentado de 8 a 15 para suavizar
-      maxZoom: 17,
-      max: 15,           // Valor máximo esperado (ajusta según tus datos)
-      minOpacity: 0.3,   // Opacidad mínima para que se vea algo
-      gradient: {        // Gradiente personalizado para resaltar altas intensidades
-        0.2: 'blue',
-        0.4: 'cyan', 
-        0.6: 'lime',
-        0.8: 'yellow',
-        0.9: 'orange',
-        1.0: 'red'
+    // 🔥 BOOST SIMPLE Y DIRECTO - mientras más alto, MÁS BOOST
+    const boostedPoints = safePoints.map(([lat, lng, intensity]) => {
+      let boostedIntensity = intensity;
+      
+      // Multiplicadores por rangos - ajusta estos números según necesites
+      if (intensity >= 10) {
+        boostedIntensity = intensity * 50; // Los más altos x50
+      } else if (intensity >= 5) {
+        boostedIntensity = intensity * 25; // Altos x25  
+      } else if (intensity >= 3) {
+        boostedIntensity = intensity * 15; // Medios x15
+      } else if (intensity >= 2) {
+        boostedIntensity = intensity * 8;  // Bajos x8
+      } else {
+        boostedIntensity = intensity * 3;  // Mínimos x3
+      }
+      
+      return [lat, lng, boostedIntensity];
+    });
+
+    const heat = L.heatLayer(boostedPoints, {
+      radius: 25,          // Radio óptimo
+      blur: 10,            // Blur reducido para más definición
+      maxZoom: 18,
+      max: 30,             // Valor máximo ajustado
+      minOpacity: 0.3,     // Opacidad mínima muy baja
+      gradient: {          // Gradiente agresivo hacia rojo
+        0.5: 'rgba(0, 0, 255, 0.1)',     // Azul muy tenue
+        0.6: 'rgba(0, 255, 255, 0.3)',   // Cyan ligero  
+        0.7: 'rgba(0, 255, 0, 0.5)',     // Verde
+        0.8: 'rgba(255, 255, 0, 0.7)',   // Amarillo
+        0.85: 'rgba(255, 165, 0, 0.9)',  // Naranja intenso
+        0.95: 'rgba(255, 69, 0, 1)',     // Rojo-naranja
+        1.0: 'rgba(220, 20, 60, 1)'      // Rojo intenso
       }
     }).addTo(map);
 
@@ -71,7 +85,7 @@ export default function Heatmap({
       >
         <TileLayer
           attribution="&copy; OpenStreetMap"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url="https://{s}.tile.openstreetMap.org/{z}/{x}/{y}.png"
         />
         <HeatLayer points={points} />
       </MapContainer>

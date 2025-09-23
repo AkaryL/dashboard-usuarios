@@ -24,12 +24,34 @@ function getUserMac(u = {}) {
   return u?.mac || u?.mac_address || u?.fingerprint || "";
 }
 
+const base64toFile = (base64String) => {
+  const byteString = atob(base64String.split(",")[1]);
+  const mimeString = base64String.split(",")[0].split(":")[1].split(";")[0];
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  return new File([ab], "image.png", { type: mimeString });
+};
+
+const getRiskColor = (level) => {
+  if (level === "Alto") return "px-2 py-1 text-red-600 border-2 border-red-600 rounded-xl shadow-md animate-pulse";
+  if (level === "Medio") return "px-2 py-1 text-yellow-600 bg border-2 border-yellow-600 rounded-xl shadow-md animate-pulse";
+  return "px-2 py-1 text-green-600 b border-2 border-green-600 rounded-xl shadow-md";
+};
+
 // Helpers UI
-function InfoRow({ label, value }) {
+function InfoRow({ label, value, risk }) {
   return (
     <div className="flex items-start gap-2 py-1">
       <div className="w-32 text-xs text-gray-600 dark:text-green-300 font-medium flex-shrink-0">{label}</div>
-      <div className="text-xs text-gray-900 dark:text-white">{value ?? "—"}</div>
+      {!risk && <div className="text-xs text-gray-900 dark:text-white">{value ?? "—"}</div>}
+      {risk && (
+        <div className={`text-xs font-medium ${getRiskColor(value)}`}>
+          {value}
+        </div>
+      )}
     </div>
   );
 }
@@ -84,6 +106,8 @@ export default function UserDetail() {
     lastVisits,
     fetchConnectionsByHour,
     connectionsByHour,
+    firstAndLastSeen,
+    fetchFirstAndLastSeen,
   } = useContext(DataContext);
 
   // -----------------------
@@ -134,6 +158,7 @@ export default function UserDetail() {
     // Carga derivada del usuario (estas ya funcionaban con la MAC de la URL)
     fetchHeatPoint(macParam);
     fetchLastVisits(macParam);
+    fetchFirstAndLastSeen(macParam);
     // si tu backend no acepta el 2° arg, simplemente lo ignorará
     fetchConnectionsByHour(macParam, { date: filters.date });
 
@@ -298,7 +323,14 @@ export default function UserDetail() {
             {/* ===== CONTENIDO: DETALLES ===== */}
             {activeTab === "detalles" && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80 p-4">
-                <div className="text-xs text-gray-600 dark:text-gray-300 font-medium mb-3 flex justify-between">
+                <div className="flex items-center justify-between mb-4 gap-4">
+
+                {selectedUser?.photo && (
+                  <div className="flex justify-center mb-4">
+                    <img src={URL.createObjectURL(base64toFile(selectedUser.photo))} alt="User" className="w-56 object-cover border-4 border-white dark:border-gray-800 shadow-md" />
+                  </div>
+                )}
+                <div className="text-xs text-gray-600 dark:text-gray-300 font-medium mb-3 flex items-center justify-between gap-4">
                   <div className="text-green-400">MAC: {getUserMac(selectedUser) || macParam}</div>
                   <div className="flex gap-2 sm:gap-4 flex-wrap">
                     <button className="px-3 py-2 bg-green-800/20 border-green-800 border text-white text-xs rounded hover:bg-blue-700" onClick={() => window.print()}>
@@ -323,6 +355,7 @@ export default function UserDetail() {
                     </button>
                   </div>
                 </div>
+                </div>
                 <div className="grid md:grid-cols-3 gap-4">
                   <div className="md:col-span-2">
                     <div className="grid sm:grid-cols-2 gap-2">
@@ -338,13 +371,13 @@ export default function UserDetail() {
                       <InfoRow label="Municipio" value={selectedUser?.municipality} />
                       <InfoRow label="Lenguaje" value={selectedUser?.language} />
                       <InfoRow label="Nivel académico" value={selectedUser?.academic_level} />
-                      <InfoRow label="Nivel de riesgo" value={selectedUser?.risk_level} />
+                      <InfoRow label="Nivel de riesgo" value={selectedUser?.risk_level} risk />
                       <InfoRow label="Nivel socioeconómico" value={selectedUser?.socioeconomic_level} />
                     </div>
                   </div>
                   <div className="grid gap-3">
-                    <StatCard title="Primera conexión" value={formatDate(selectedUser?.createdat)} />
-                    <StatCard title="Última conexión" value={formatDate(selectedUser?.updatedat)} />
+                    <StatCard title="Primera conexión" value={formatDate(firstAndLastSeen?.first_seen)} />
+                    <StatCard title="Última conexión" value={formatDate(firstAndLastSeen?.last_seen)} />
                     <StatCard title="Número de conexiones" value={connectionsCount} />
                   </div>
                 </div>
