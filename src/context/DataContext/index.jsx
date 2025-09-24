@@ -163,13 +163,23 @@ const DataProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    fetchUsers();
-    fetchRiskUsers();
+  // Ejecuta las primeras cargas normales
+  fetchUsers();
+  fetchRiskUsers();
+  fetchTopUsers();
+  fetchTopRouters();
+  fetchGeneralHeatPoints();
+
+  // Ejecuta fetchVisits cada 5s
+  const interval = setInterval(() => {
     fetchVisits();
-    fetchTopUsers();
-    fetchTopRouters();
-    fetchGeneralHeatPoints();
-  }, []);
+    // console.log("Visitas cargadas");
+  }, 5000);
+
+  // Limpieza al desmontar
+  return () => clearInterval(interval);
+}, []);
+
 
   return (
     <DataContext.Provider

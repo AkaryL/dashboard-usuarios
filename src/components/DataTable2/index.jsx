@@ -1,21 +1,47 @@
 // src/components/DataTable2/index.jsx
 import React from "react";
 
+const NEON = "#6CFC4F";
+
 export default function DataTable2({ columns = [], rows = [] }) {
   const safeRows = Array.isArray(rows) ? rows : [];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200/80 dark:border-gray-700/80 overflow-hidden">
+    <div
+      className="rounded-xl overflow-hidden border shadow-xl"
+      style={{
+        background: "rgba(10,13,22,0.75)",                 // glass dark
+        borderColor: "rgba(108,252,79,0.18)",              // borde verde translúcido
+        boxShadow: "0 6px 24px rgba(0,0,0,.45), 0 0 0 1px rgba(108,252,79,.09) inset",
+      }}
+    >
       {/* Mobile View - Card Layout */}
       <div className="md:hidden">
         <div className="max-h-[300px] overflow-y-auto p-3 space-y-3">
           {safeRows.length ? (
             safeRows.map((r, i) => (
-              <div key={i} className="bg-gray-50/50 dark:bg-gray-700/50 rounded-lg p-3 border border-gray-100 dark:border-gray-600">
+              <div
+                key={i}
+                className="rounded-lg p-3"
+                style={{
+                  background: "rgba(12,18,27,0.85)",
+                  border: "1px solid rgba(108,252,79,0.18)",
+                  boxShadow: "0 0 0 1px rgba(108,252,79,.06) inset",
+                }}
+              >
                 {columns.map((c) => (
-                  <div key={c.key} className="flex justify-between items-start py-1 border-b border-gray-100 dark:border-gray-600 last:border-b-0">
-                    <span className="text-xs font-medium text-gray-600 dark:text-gray-300 w-1/3">{c.header}:</span>
-                    <span className="text-xs text-gray-900 dark:text-white w-2/3 text-right">
+                  <div
+                    key={c.key}
+                    className="flex justify-between items-start py-2 last:pb-0"
+                    style={{ borderBottom: "1px dashed rgba(108,252,79,0.14)" }}
+                  >
+                    <span className="text-[11px] font-medium text-slate-300 w-1/2 pr-2">
+                      {c.header}
+                    </span>
+                    <span
+                      className="text-[11px] text-slate-100 w-1/2 text-right"
+                      style={{ textShadow: `0 0 8px ${NEON}22` }}
+                    >
                       {c.render ? c.render(r[c.key], r) : r[c.key] || "—"}
                     </span>
                   </div>
@@ -23,7 +49,7 @@ export default function DataTable2({ columns = [], rows = [] }) {
               </div>
             ))
           ) : (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-xs">
+            <div className="text-center py-8 text-slate-400 text-xs">
               No data available
             </div>
           )}
@@ -32,26 +58,58 @@ export default function DataTable2({ columns = [], rows = [] }) {
 
       {/* Desktop View - Table Layout */}
       <div className="hidden md:block">
-        <div className="overflow-x-auto overflow-y-auto h-[300px]">
+        <div
+          className="overflow-x-auto overflow-y-auto h-[300px]"
+          style={{ scrollbarWidth: "thin", scrollbarColor: `${NEON}22 transparent` }}
+        >
           <table className="min-w-full">
-            <thead className="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 sticky top-0">
+            <thead
+              className="sticky top-0"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(108,252,79,0.12), rgba(108,252,79,0.06))",
+                backdropFilter: "blur(6px)",
+                borderBottom: "1px solid rgba(108,252,79,0.16)",
+                boxShadow: "0 1px 0 rgba(108,252,79,0.08) inset, 0 8px 24px rgba(0,0,0,.25)",
+              }}
+            >
               <tr>
                 {columns.map((c) => (
-                  <th key={c.key} className="text-left bg-white dark:bg-gray-800 px-4 py-3 text-xs font-medium text-gray-900 dark:text-white">
+                  <th
+                    key={c.key}
+                    className="text-left px-4 py-3 text-[11px] font-semibold tracking-wider uppercase text-slate-100"
+                    style={{ textShadow: `0 0 10px ${NEON}22` }}
+                  >
                     {c.header}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+
+            <tbody>
               {safeRows.length ? (
                 safeRows.map((r, i) => (
-                  <tr 
-                    key={i} 
-                    className="hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-colors duration-150"
+                  <tr
+                    key={i}
+                    className="transition-colors"
+                    style={{
+                      background:
+                        i % 2 === 0 ? "rgba(12,18,27,0.75)" : "rgba(12,18,27,0.6)",
+                      borderBottom: "1px solid rgba(108,252,79,0.08)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(12,18,27,0.9)";
+                      e.currentTarget.style.boxShadow =
+                        "inset 0 0 0 1px rgba(108,252,79,0.18)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background =
+                        i % 2 === 0 ? "rgba(12,18,27,0.75)" : "rgba(12,18,27,0.6)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
                   >
                     {columns.map((c) => (
-                      <td key={c.key} className="px-4 py-3 text-xs text-gray-600 dark:text-gray-300">
+                      <td key={c.key} className="px-4 py-3 align-top" style={{ fontSize: 12, color: "#DCE7DD" }}>
                         {c.render ? c.render(r[c.key], r) : r[c.key] || "—"}
                       </td>
                     ))}
@@ -61,7 +119,8 @@ export default function DataTable2({ columns = [], rows = [] }) {
                 <tr>
                   <td
                     colSpan={columns.length}
-                    className="px-4 py-8 text-gray-500 dark:text-gray-400 text-center text-xs"
+                    className="px-4 py-8 text-center text-xs"
+                    style={{ color: "rgba(220,231,221,0.65)" }}
                   >
                     No data available
                   </td>
@@ -70,6 +129,18 @@ export default function DataTable2({ columns = [], rows = [] }) {
             </tbody>
           </table>
         </div>
+
+        {/* Scrollbar webkit */}
+        <style>{`
+          @media (min-width: 768px) {
+            .md\\:block ::-webkit-scrollbar { height: 10px; width: 10px; }
+            .md\\:block ::-webkit-scrollbar-thumb {
+              background: ${NEON}33; border-radius: 8px; border: 2px solid transparent; background-clip: content-box;
+            }
+            .md\\:block ::-webkit-scrollbar-thumb:hover { background: ${NEON}55; }
+            .md\\:block ::-webkit-scrollbar-track { background: transparent; }
+          }
+        `}</style>
       </div>
     </div>
   );
