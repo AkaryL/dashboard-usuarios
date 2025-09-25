@@ -184,14 +184,14 @@ const DataProvider = ({ children }) => {
   fetchTopUsers();
   fetchTopRouters();
   fetchGeneralHeatPoints();
-  fetchCount();
-  fetchVisits();
-
+  
   // Ejecuta fetchVisits cada 5s
   const interval = setInterval(() => {
+    fetchCount();
+    fetchVisits();
     // fetchCount();
     // console.log("Visitas cargadas");
-  }, 5000);
+  }, 10000);
 
   // Limpieza al desmontar
   return () => clearInterval(interval);
