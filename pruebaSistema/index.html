@@ -1,0 +1,1951 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Integral de Expedientes - Centro de Comando ZMG</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #e0e6ed;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(10, 14, 39, 0.98);
+            padding: 1.25rem 2rem;
+            border-bottom: 3px solid #00ff88;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .logo img {
+            width: 40px;
+            height: 40px;
+            background: #00ff88;
+            border-radius: 50%;
+            padding: 8px;
+        }
+
+        .logo h1 {
+            font-size: 1.6rem;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            font-weight: 700;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-tabs a {
+            color: #a0a8b8;
+            text-decoration: none;
+            padding: 0.5rem 1.25rem;
+            transition: all 0.3s;
+            position: relative;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .nav-tabs a.active,
+        .nav-tabs a:hover {
+            color: #00ff88;
+        }
+
+        .nav-tabs a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #00ff88;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: rgba(0, 255, 136, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Container */
+        .container {
+            display: flex;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            min-width: 420px;
+            width: 420px;
+            background: rgba(26, 31, 58, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            height: calc(100vh - 180px);
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 14px 50px 14px 18px;
+            background: rgba(10, 14, 39, 0.9);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            color: #e0e6ed;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+        }
+
+        .search-box button {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #00ff88;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            color: #0a0e27;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        /* Advanced Search */
+        .advanced-search {
+            margin-bottom: 1.5rem;
+            padding: 1.25rem;
+            background: rgba(10, 14, 39, 0.7);
+            border-radius: 10px;
+            display: none;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .advanced-search.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toggle-advanced {
+            color: #00ff88;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-bottom: 1.25rem;
+            display: inline-block;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .toggle-advanced:hover {
+            color: #00cc6a;
+            transform: translateX(5px);
+        }
+
+        /* Filter Section */
+        .filters {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(10, 14, 39, 0.4);
+            border-radius: 10px;
+        }
+
+        .filter-title {
+            font-size: 0.95rem;
+            color: #00ff88;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+        }
+
+        .filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .chip {
+            padding: 8px 14px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .chip:hover,
+        .chip.active {
+            background: rgba(0, 255, 136, 0.3);
+            border-color: #00ff88;
+            transform: translateY(-2px);
+        }
+
+        /* Individual List */
+        .individual-list {
+            max-height: 450px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .individual-card {
+            background: rgba(10, 14, 39, 0.7);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .individual-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .individual-card:hover::before {
+            left: 100%;
+        }
+
+        .individual-card:hover {
+            transform: translateX(5px);
+            border-color: #00ff88;
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .individual-header {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .individual-avatar {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            
+            flex-shrink: 0;
+        }
+
+        .individual-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .individual-info h3 {
+            color: #e0e6ed;
+            font-size: 1.05rem;
+            margin-bottom: 0.35rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .individual-info p {
+            color: #a0a8b8;
+            font-size: 0.88rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .individual-tags {
+            display: flex;
+            gap: 0.25rem;
+            margin-top: 0.5rem;
+        }
+
+        .tag {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .risk-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .risk-critical {
+            background: rgba(255, 0, 100, 0.2);
+            color: #ff0064;
+            border: 1px solid #ff0064;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .risk-high {
+            background: rgba(255, 67, 67, 0.2);
+            color: #ff4343;
+            border: 1px solid #ff4343;
+        }
+
+        .risk-medium {
+            background: rgba(255, 170, 0, 0.2);
+            color: #ffaa00;
+            border: 1px solid #ffaa00;
+        }
+
+        .risk-low {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            border: 1px solid #00ff88;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            background: rgba(26, 31, 58, 0.9);
+            border-radius: 12px;
+            padding: 2.5rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            overflow-y: auto;
+            max-height: calc(100vh - 180px);
+        }
+
+        /* Expedient Header */
+        .expedient-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid rgba(0, 255, 136, 0.2);
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .profile-section {
+            display: flex;
+            gap: 2rem;
+            flex: 1;
+        }
+
+        .profile-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            color: #0a0e27;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .profile-details h2 {
+            color: #00ff88;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #a0a8b8;
+            font-size: 0.9rem;
+        }
+
+        .meta-item strong {
+            color: #e0e6ed;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+        }
+
+        .btn-primary {
+            background: #00ff88;
+            color: #0a0e27;
+        }
+
+        .btn-primary:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn-danger {
+            background: rgba(255, 67, 67, 0.2);
+            color: #ff4343;
+            border: 1px solid #ff4343;
+        }
+
+        .btn-secondary {
+            background: rgba(160, 168, 184, 0.2);
+            color: #a0a8b8;
+            border: 1px solid #a0a8b8;
+        }
+
+        /* Quick Stats */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+            padding: 1.5rem;
+            background: rgba(10, 14, 39, 0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 136, 0.1);
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(0, 255, 136, 0.08);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 136, 0.15);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(0, 255, 136, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.15);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #a0a8b8;
+            text-transform: uppercase;
+            margin-top: 0.25rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+            overflow-x: auto;
+            padding-bottom: 2px;
+            scrollbar-width: thin;
+        }
+
+        .tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .tab {
+            padding: 0.75rem 1.25rem;
+            color: #a0a8b8;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+            white-space: nowrap;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .tab:hover {
+            color: #e0e6ed;
+        }
+
+        .tab.active {
+            color: #00ff88;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #00ff88;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.75rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .info-card {
+            background: rgba(10, 14, 39, 0.7);
+            border: 2px solid rgba(0, 255, 136, 0.1);
+            border-radius: 10px;
+            padding: 1.75rem;
+            transition: all 0.3s;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 255, 136, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.1);
+        }
+
+        .info-card h4 {
+            color: #00ff88;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+
+        .info-card p {
+            color: #e0e6ed;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-card .sub-info {
+            color: #a0a8b8;
+            font-size: 0.85rem;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 50px;
+            max-width: 100%;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, #00ff88, rgba(0, 255, 136, 0.2));
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2.5rem;
+            padding: 1.75rem;
+            background: rgba(10, 14, 39, 0.7);
+            border: 2px solid rgba(0, 255, 136, 0.1);
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .timeline-item:hover {
+            transform: translateX(10px);
+            border-color: rgba(0, 255, 136, 0.4);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -39px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #00ff88;
+            border: 3px solid #1a1f3a;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .timeline-date {
+            color: #00ff88;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-title {
+            color: #e0e6ed;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-description {
+            color: #a0a8b8;
+            font-size: 0.9rem;
+        }
+
+        .timeline-location {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-top: 0.5rem;
+            padding: 4px 8px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #00ff88;
+        }
+
+        /* Routes Map */
+        .routes-container {
+            background: rgba(10, 14, 39, 0.8);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .route-map {
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%230a0e27"/><path d="M0 50h100M50 0v100" stroke="%2300ff88" stroke-width="0.1" opacity="0.2"/></svg>');
+            background-size: 50px 50px;
+            position: relative;
+        }
+
+        /* Social Media */
+        .social-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .social-card {
+            background: rgba(10, 14, 39, 0.6);
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .social-platform {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .platform-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: rgba(0, 255, 136, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .social-username {
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        .social-follows {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(0, 255, 136, 0.1);
+        }
+
+        .follow-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.85rem;
+            color: #a0a8b8;
+        }
+
+        .follow-warning {
+            color: #ff4343;
+        }
+
+        /* Financial Data */
+        .financial-section {
+            background: rgba(10, 14, 39, 0.6);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .financial-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .financial-title {
+            color: #00ff88;
+            font-size: 1rem;
+            text-transform: uppercase;
+        }
+
+        .transaction-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+            transition: all 0.3s;
+        }
+
+        .transaction-item:hover {
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+        }
+
+        .transaction-in {
+            color: #00ff88;
+        }
+
+        .transaction-out {
+            color: #ff4343;
+        }
+
+        /* Device Tracking */
+        .device-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .device-card {
+            background: rgba(10, 14, 39, 0.6);
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .device-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .device-type {
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        .device-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+        }
+
+        .device-info {
+            font-size: 0.85rem;
+            color: #a0a8b8;
+        }
+
+        .device-mac {
+            font-family: monospace;
+            background: rgba(0, 255, 136, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+
+        /* Analysis Cards */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .analysis-card {
+            background: rgba(10, 14, 39, 0.6);
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .analysis-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00ff88, #00cc6a);
+        }
+
+        .analysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .analysis-title {
+            color: #e0e6ed;
+            font-size: 1rem;
+        }
+
+        .analysis-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00ff88;
+            margin-bottom: 0.5rem;
+        }
+
+        .analysis-chart {
+            height: 100px;
+            background: linear-gradient(180deg, rgba(0, 255, 136, 0.2), transparent);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Connections Map */
+        .connections-container {
+            background: rgba(10, 14, 39, 0.8);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            position: relative;
+            height: 400px;
+            overflow: hidden;
+        }
+
+        .connection-node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0, 255, 136, 0.2);
+            border: 2px solid #00ff88;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00ff88;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .connection-node:hover {
+            transform: scale(1.2);
+            background: rgba(0, 255, 136, 0.4);
+            z-index: 10;
+        }
+
+        .connection-line {
+            position: absolute;
+            height: 2px;
+            background: rgba(0, 255, 136, 0.3);
+            transform-origin: left center;
+        }
+
+        /* Heat Map */
+        .heatmap-container {
+            background: rgba(10, 14, 39, 0.8);
+            border-radius: 12px;
+            padding: 1.5rem;
+            height: 500px;
+            position: relative;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(10, 14, 39, 0.4);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 136, 0.5);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00ff88;
+        }
+
+        /* Responsive */
+        @media (max-width: 1600px) {
+            .sidebar {
+                min-width: 380px;
+                width: 380px;
+            }
+        }
+
+        @media (max-width: 1400px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                min-width: 100%;
+                max-height: 400px;
+                margin-bottom: 2rem;
+            }
+
+            .main-content {
+                max-height: none;
+            }
+        }
+
+        @media (min-width: 2200px) {
+            .container {
+                max-width: 2100px;
+                margin: 0 auto;
+                padding: 2rem 3rem;
+            }
+
+            .sidebar {
+                min-width: 500px;
+                width: 500px;
+            }
+            
+            .info-grid {
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230a0e27'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z'/%3E%3C/svg%3E" alt="Logo">
+            <h1>Centro de Comando ZMG</h1>
+        </div>
+        <nav class="nav-tabs">
+            <a href="#" class="active">EXPEDIENTES</a>
+            <a href="#">MAPA EN VIVO</a>
+            <a href="#">ANÁLISIS IA</a>
+            <a href="#">C5 ESCUDO URBANO</a>
+            <a href="#">FISCALÍA</a>
+            <a href="#">REPORTES</a>
+        </nav>
+    </header>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-item">
+            <span class="status-indicator"></span>
+            <span>Sistema Activo - RED JALISCO</span>
+        </div>
+        <div class="status-item">
+            <span>Usuarios Monitoreados: 1,248,283</span>
+        </div>
+        <div class="status-item">
+            <span>Alertas Activas: 553</span>
+        </div>
+        <div class="status-item">
+            <span>IA Predictiva: 96.7% Precisión</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="search-box">
+                <input type="text" placeholder="Buscar: Nombre, CURP, RFC, MAC, Usuario..." id="searchInput">
+                <button onclick="searchIndividuals()">🔍</button>
+            </div>
+
+            <span class="toggle-advanced" onclick="toggleAdvancedSearch()">▼ Búsqueda Avanzada</span>
+            
+            <div class="advanced-search" id="advancedSearch">
+                <input type="text" placeholder="Dirección MAC" style="width: 100%; margin-bottom: 0.75rem; padding: 10px; background: rgba(10, 14, 39, 0.9); border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 6px; color: #e0e6ed; font-size: 14px;">
+                <input type="text" placeholder="Redes Sociales" style="width: 100%; margin-bottom: 0.75rem; padding: 10px; background: rgba(10, 14, 39, 0.9); border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 6px; color: #e0e6ed; font-size: 14px;">
+                <select style="width: 100%; padding: 10px; background: rgba(10, 14, 39, 0.9); border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 6px; color: #e0e6ed; font-size: 14px;">
+                    <option>Todas las zonas</option>
+                    <option>Guadalajara Centro</option>
+                    <option>Zapopan</option>
+                    <option>Tlaquepaque</option>
+                    <option>Tonalá</option>
+                    <option>Tlajomulco</option>
+                    <option>El Salto</option>
+                </select>
+            </div>
+
+            <div class="filters">
+                <div class="filter-title">Nivel de Riesgo</div>
+                <div class="filter-chips">
+                    <div class="chip" onclick="filterByRisk('all')">Todos</div>
+                    <div class="chip" onclick="filterByRisk('critical')">Crítico</div>
+                    <div class="chip" onclick="filterByRisk('high')">Alto</div>
+                    <div class="chip" onclick="filterByRisk('medium')">Medio</div>
+                    <div class="chip" onclick="filterByRisk('low')">Bajo</div>
+                </div>
+
+                <div class="filter-title">Estado de Monitoreo</div>
+                <div class="filter-chips">
+                    <div class="chip" onclick="filterByStatus('active')">Activo 24/7</div>
+                    <div class="chip" onclick="filterByStatus('monitoring')">Vigilancia</div>
+                    <div class="chip" onclick="filterByStatus('passive')">Pasivo</div>
+                    <div class="chip" onclick="filterByStatus('inactive')">Inactivo</div>
+                </div>
+
+                <div class="filter-title">Grupos de Interés</div>
+                <div class="filter-chips">
+                    <div class="chip" onclick="filterByGroup('pve')">PVE</div>
+                    <div class="chip" onclick="filterByGroup('radical')">Grupos Radicales</div>
+                    <div class="chip" onclick="filterByGroup('student')">Estudiantes</div>
+                </div>
+            </div>
+
+            <div class="individual-list" id="individualList">
+                <!-- Lista de individuos se carga dinámicamente -->
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="expedient-header">
+                <div class="profile-section">
+                    <div class="profile-image" id="profileImage"><img src="brando.png"></div>
+                    <div class="profile-details">
+                        <h2 id="individualName">TOMAS ALEJANDRO PEÑA SANCHEZ</h2>
+                        <div class="profile-meta">
+                            <div class="meta-item">
+                                <strong>Usuario:</strong> <span id="userId">CAGT240796V6</span>
+                            </div>
+                            <div class="meta-item">
+                                <strong>CURP:</strong> <span id="curp"></span>
+                            </div>
+                            <div class="meta-item">
+                                <strong>RFC:</strong> <span id="rfc"></span>
+                            </div>
+                            <div class="meta-item">
+                                <strong>Edad:</strong> <span id="age">36 años </span>
+                            </div>
+                            <div class="meta-item">
+                                <strong>Sexo:</strong> <span id="gender">Masculino</span>
+                            </div>
+                            <div class="meta-item">
+                                <strong>Estatura:</strong> <span id="height">166 cm</span>
+                            </div>
+                            <div class="meta-item">
+                                <strong>Teléfono:</strong> <span id="phone">+52 33 1234 5678</span>
+                            </div>
+                            <div class="meta-item">
+                                <strong>MAC Principal:</strong> <span id="mac">A4:C3:F0:12:34:56</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="generateReport()">GENERAR CARPETA</button>
+                    <button class="btn btn-danger" onclick="markHighRisk()">ALERTA CRÍTICA</button>
+                    <button class="btn btn-secondary" onclick="shareWithAgencies()">COMPARTIR INTERINSTITUCIONAL</button>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="quick-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="lastSeenStat">2h</div>
+                    <div class="stat-label">Última Detección</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #ffaa00;">MEDIO</div>
+                    <div class="stat-label">Nivel Riesgo</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">47</div>
+                    <div class="stat-label">Conexiones</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">15</div>
+                    <div class="stat-label">Detecciones Hoy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Alertas PVE</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">89%</div>
+                    <div class="stat-label">Probabilidad Patrón</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('general')">Información General</div>
+                <div class="tab" onclick="switchTab('occupation')">Ocupación/Educación</div>
+                <div class="tab" onclick="switchTab('routes')">Rutas y Patrones</div>
+                <div class="tab" onclick="switchTab('social')">Redes Sociales</div>
+                <div class="tab" onclick="switchTab('devices')">Dispositivos/MAC</div>
+               
+                <div class="tab" onclick="switchTab('connections')">Red de Conexiones</div>
+                <div class="tab" onclick="switchTab('analysis')">Análisis IA</div>
+                <div class="tab" onclick="switchTab('documents')">Documentos</div>
+                <div class="tab" onclick="switchTab('agencies')">Interinstitucional</div>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="tab-content active" id="general">
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h4>📍 Localización Actual</h4>
+                        <p> Puerto Vallarta, Jalisco</p>
+                        <span class="sub-info"> Calle Melón 29 y/o 12, Campestre de San Nicolás</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>🏠 Domicilio Principal</h4>
+                        <p>Lomas de San Nicolás,</p>
+                        <span class="sub-info">Puerto 
+                            Vallarta, Jalisco. </span>
+                    </div>
+                    
+                    
+                    
+                </div>
+            </div>
+
+            <div class="tab-content" id="occupation">
+                <h3 style="color: #00ff88; margin-bottom: 1.5rem;">Información Académica y Laboral</h3>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h4>🎓 Institución Educativa</h4>
+                        <p>Universidad de Guadalajara</p>
+                        <span class="sub-info">Preparatoria No. 2</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>📚 Programa Académico</h4>
+                        <p>Bachillerato General</p>
+                        <span class="sub-info">3er Semestre - Turno Matutino</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>📊 Rendimiento</h4>
+                        <p>Promedio: 8.2</p>
+                        <span class="sub-info">Asistencia: 85%</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>💼 Ocupación</h4>
+                        <p>Estudiante</p>
+                        <span class="sub-info">Sin empleo registrado</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>🏫 Horario Escolar</h4>
+                        <p>07:00 - 13:00</p>
+                        <span class="sub-info">Lunes a Viernes</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>📍 Campus</h4>
+                        <p>Sede Centro Histórico</p>
+                        <span class="sub-info">Av. Hidalgo 919</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="routes">
+                <h3 style="color: #00ff88; margin-bottom: 1.5rem;">Rutas Frecuentes y Patrones de Movimiento</h3>
+                
+                <div class="routes-container">
+                    <div class="route-map" id="routeMap">
+                        <!-- Aquí se mostraría el mapa de rutas -->
+                        <div style="padding: 2rem; color: #00ff88;">
+                            <h4>Rutas Detectadas por IA:</h4>
+                            <ul style="margin-top: 1rem;">
+                                <li>🚌 Parada Camión 200 → Centro (07:00 diario)</li>
+                                <li>🚌 Parada Camión 20 → Zapopan (14:00 L-M-V)</li>
+                                <li>🚌 Camión 12 → Tlaquepaque (18:00 fines de semana)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-grid" style="margin-top: 2rem;">
+                    <div class="info-card">
+                        <h4>🕐 Horarios Frecuentes</h4>
+                        <p>06:30 - 07:30: Traslado matutino</p>
+                        <p>13:00 - 14:00: Retorno mediodía</p>
+                        <p>19:00 - 20:00: Actividad nocturna</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>📍 Puntos de Interés</h4>
+                        <p>• UDG Prepa 2</p>
+                        <p>• Plaza de Armas</p>
+                        <p>• Centro Comercial Andares</p>
+                        <p>• Parque Metropolitano</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>🔄 Patrones Detectados</h4>
+                        <p>Rutina semanal: 87% consistente</p>
+                        <p>Desviaciones: Viernes tarde</p>
+                        <p>Zona comfort: 5km radio</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="social">
+                <h3 style="color: #00ff88; margin-bottom: 1.5rem;">Monitoreo de Redes Sociales</h3>
+                
+                <div class="social-grid">
+                    <div class="social-card">
+                        <div class="social-platform">
+                            <div class="platform-icon">IG</div>
+                            <span class="social-username">@moxc12</span>
+                        </div>
+                        <div class="social-follows">
+                            <h5 style="color: #00ff88; margin-bottom: 0.5rem;">Cuentas que Sigue:</h5>
+                            <div class="follow-item">• Fest Tecno GDL</div>
+                            <div class="follow-item">• DWE Underground</div>
+                            <div class="follow-item follow-warning">⚠️ PVE_Resistencia</div>
+                        </div>
+                    </div>
+                    
+                    <div class="social-card">
+                        <div class="social-platform">
+                            <div class="platform-icon">FB</div>
+                            <span class="social-username">José M. Peña</span>
+                        </div>
+                        <div class="social-follows">
+                            <h5 style="color: #00ff88; margin-bottom: 0.5rem;">Grupos:</h5>
+                            <div class="follow-item">• UDG Estudiantes Unidos</div>
+                            <div class="follow-item follow-warning">⚠️ Resistencia Juvenil GDL</div>
+                            <div class="follow-item">• Música Electrónica Jalisco</div>
+                        </div>
+                    </div>
+
+                    <div class="social-card">
+                        <div class="social-platform">
+                            <div class="platform-icon">TW</div>
+                            <span class="social-username">@jmadero_gdl</span>
+                        </div>
+                        <div class="social-follows">
+                            <h5 style="color: #00ff88; margin-bottom: 0.5rem;">Actividad Reciente:</h5>
+                            <div class="follow-item follow-warning">⚠️ Retuits contenido político</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card" style="margin-top: 1.5rem; background: rgba(255, 67, 67, 0.1); border-color: rgba(255, 67, 67, 0.3);">
+                    <h4 style="color: #ff4343;">⚠️ ALERTA: Grupos de Riesgo Detectados</h4>
+                    <p style="color: #ff4343;">Se ha detectado interacción con 3 grupos relacionados con violencia política (PVE)</p>
+                    <p style="color: #a0a8b8; margin-top: 0.5rem;">Recomendación: Elevar nivel de monitoreo a 24/7</p>
+                </div>
+            </div>
+
+            <div class="tab-content" id="devices">
+                <h3 style="color: #00ff88; margin-bottom: 1.5rem;">Dispositivos y Direcciones MAC</h3>
+                
+                <div class="device-grid">
+                    <div class="device-card">
+                        <div class="device-header">
+                            <span class="device-type">📱 Smartphone Principal 3328284017  </span>
+                            <span class="device-status"></span>
+                        </div>
+                        <div class="device-info">
+                            <p>Marca: Xiaomi Redmi Note 11</p>
+                            <p>SO: Android 13</p>
+                            <div class="device-mac">MAC: A4:C3:F0:12:34:56</div>
+                            <p style="margin-top: 0.5rem;">Última conexión: Hace 2 horas</p>
+                            <p>AP: Plaza_Armas_WiFi</p>
+                        </div>
+                    </div>
+
+                    <div class="device-card">
+                        <div class="device-header">
+                            <span class="device-type">💻 Laptop</span>
+                            <span class="device-status" style="background: #a0a8b8;"></span>
+                        </div>
+                        <div class="device-info">
+                            <p>Marca: HP Pavilion</p>
+                            <p>SO: Windows 11</p>
+                            <div class="device-mac">MAC: B8:27:EB:45:67:89</div>
+                            <p style="margin-top: 0.5rem;">Última conexión: Hace 18 horas</p>
+                            <p>AP: UDG_Estudiantes</p>
+                        </div>
+                    </div>
+
+                    <div class="device-card">
+                        <div class="device-header">
+                            <span class="device-type">⌚ Wearable</span>
+                            <span class="device-status"></span>
+                        </div>
+                        <div class="device-info">
+                            <p>Marca: Mi Band 6</p>
+                            <p>Tipo: Fitness Tracker</p>
+                            <div class="device-mac">MAC: DC:A6:32:98:76:54</div>
+                            <p style="margin-top: 0.5rem;">Sincronización continua</p>
+                            <p>Datos biométricos disponibles</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 style="color: #00ff88; margin: 2rem 0 1rem;">Detecciones Sin Conexión (Proximidad AP)</h4>
+                <div class="info-card">
+                    <p>• Detectado cerca de AP_Gobierno_JAL - Sin conexión (3 veces esta semana)</p>
+                    <p>• Proximidad a RedSegura_C5 - Sin autenticación (Diario 07:15)</p>
+                    <p>• Señal detectada en Zona_Restringida_01 - Acceso denegado</p>
+                </div>
+
+                <h4 style="color: #00ff88; margin: 2rem 0 1rem;">MACs Relacionadas (Misma Zona/Horario)</h4>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h4>Dispositivos Frecuentes</h4>
+                        <p style="font-family: monospace; font-size: 0.85rem;">
+                            • F4:E5:D6:78:90:AB (85% coincidencia)<br>
+                            • C8:D9:E0:12:34:CD (72% coincidencia)<br>
+                            • A1:B2:C3:45:67:EF (68% coincidencia)
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="financial">
+                <h3 style="color: #00ff88; margin-bottom: 1.5rem;">Información Financiera - BANXICO/INEGI</h3>
+                
+                <div class="financial-section">
+                    <div class="financial-header">
+                        <span class="financial-title">Transferencias Detectadas</span>
+                        <span style="color: #a0a8b8;">Últimos 30 días</span>
+                    </div>
+                    <div class="transaction-list">
+                        <div class="transaction-item">
+                            <div>
+                                <div>Transferencia SPEI</div>
+                                <div style="font-size: 0.8rem; color: #a0a8b8;">22/09/2025 14:30</div>
+                            </div>
+                            <span class="transaction-amount transaction-in">+$2,500</span>
+                        </div>
+                        <div class="transaction-item">
+                            <div>
+                                <div>Retiro ATM</div>
+                                <div style="font-size: 0.8rem; color: #a0a8b8;">21/09/2025 18:45</div>
+                            </div>
+                            <span class="transaction-amount transaction-out">-$500</span>
+                        </div>
+                        <div class="transaction-item">
+                            <div>
+                                <div>Compra OXXO</div>
+                                <div style="font-size: 0.8rem; color: #a0a8b8;">20/09/2025 09:30</div>
+                            </div>
+                            <span class="transaction-amount transaction-out">-$85</span>
+                        </div>
+                        <div class="transaction-item">
+                            <div>
+                                <div>Transferencia P2P</div>
+                                <div style="font-size: 0.8rem; color: #a0a8b8;">19/09/2025 16:20</div>
+                            </div>
+                            <span class="transaction-amount transaction-in">+$1,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h4>💳 Cuentas Bancarias</h4>
+                        <p>2 cuentas activas</p>
+                        <span class="sub-info">BBVA, Santander</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>📊 Nivel Socioeconómico</h4>
+                        <p>C+ (INEGI)</p>
+                        <span class="sub-info">Ingreso estimado: $8-15k/mes</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>🏠 Registro Predial</h4>
+                        <p>Sin propiedades</p>
+                        <span class="sub-info">Domicilio: Arrendamiento</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="activity">
+                <h3 style="color: #00ff88; margin-bottom: 1.5rem;">Actividad en Tiempo Real - Últimas 24 Horas</h3>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-date">22 Sep 2025 - 16:30</div>
+                        <div class="timeline-title">🎥 Detección por Cámara C-45</div>
+                        <div class="timeline-description">
+                            Reconocimiento facial confirmado en Plaza de Armas. Confianza: 98.7%
+                        </div>
+                        <div class="timeline-location">📍 20.6767° N, 103.3475° W</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">22 Sep 2025 - 14:15</div>
+                        <div class="timeline-title">📶 Conexión WiFi Detectada</div>
+                        <div class="timeline-description">
+                            Dispositivo A4:C3:F0:12:34:56 conectado a red pública "Centro_GDL_Free"
+                        </div>
+                        <div class="timeline-location">📍 Av. Juárez #123</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">22 Sep 2025 - 12:45</div>
+                        <div class="timeline-title">🚨 Alerta de Patrón Inusual</div>
+                        <div class="timeline-description">
+                            IA detectó desviación de ruta habitual. Zona no frecuentada anteriormente.
+                        </div>
+                        <div class="timeline-location">📍 Col. Americana</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">22 Sep 2025 - 07:30</div>
+                        <div class="timeline-title">🚌 Uso de Transporte Público</div>
+                        <div class="timeline-description">
+                            Validación de tarjeta en Ruta 200. Dirección: Centro → UDG
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">21 Sep 2025 - 23:45</div>
+                        <div class="timeline-title">📱 Actividad en Redes Sociales</div>
+                        <div class="timeline-description">
+                            15 publicaciones detectadas. Palabras clave: "protesta", "resistencia"
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">21 Sep 2025 - 20:30</div>
+                        <div class="timeline-title">🏧 Transacción Financiera</div>
+                        <div class="timeline-description">
+                            Retiro ATM $500. Ubicación: Sucursal BBVA Plaza del Sol
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="connections">
+                <h3 style="color: #00ff88; margin-bottom: 1.5rem;">Red de Conexiones y Vínculos</h3>
+                <div class="connections-container" id="connectionsMap">
+                    <div class="connection-node" style="top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 170, 0, 0.3); border-color: #ffaa00;"><img src="brando.png"></div>
+                    <div class="connection-node" style="top: 20%; left: 30%;"><img src="brandolugo.png"></div>
+                    <div class="connection-node" style="top: 30%; left: 70%;">AR</div>
+                    <div class="connection-node" style="top: 70%; left: 25%;">LG</div>
+                    <div class="connection-node" style="top: 75%; left: 65%;">RS</div>
+                    <div class="connection-node" style="top: 15%; left: 50%; background: rgba(255, 67, 67, 0.3); border-color: #ff4343;">PVE</div>
+                    <div class="connection-line" style="width: 150px; top: 50%; left: 45%; transform: rotate(-30deg);"></div>
+                    <div class="connection-line" style="width: 120px; top: 48%; left: 48%; transform: rotate(20deg);"></div>
+                    <div class="connection-line" style="width: 140px; top: 52%; left: 42%; transform: rotate(45deg);"></div>
+                    <div class="connection-line" style="width: 130px; top: 53%; left: 46%; transform: rotate(-45deg);"></div>
+                    <div class="connection-line" style="width: 180px; top: 35%; left: 50%; transform: rotate(-70deg); background: rgba(255, 67, 67, 0.5);"></div>
+                </div>
+                <div class="info-grid" style="margin-top: 2rem;">
+                    <div class="info-card">
+                        <h4>👥 Conexiones Directas</h4>
+                        <p>15 individuos confirmados</p>
+                        <span class="sub-info">3 bajo vigilancia activa</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>🔗 Conexiones Indirectas</h4>
+                        <p>73 individuos detectados</p>
+                        <span class="sub-info">12 con antecedentes</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>⚠️ Grupos de Riesgo</h4>
+                        <p>3 grupos identificados</p>
+                        <span class="sub-info">PVE, Radical MX, Resistencia</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="analysis">
+                <h3 style="color: #00ff88; margin-bottom: 1.5rem;">Análisis Predictivo IA</h3>
+                <div class="analysis-grid">
+                    <div class="analysis-card">
+                        <div class="analysis-header">
+                            <span class="analysis-title">Probabilidad de Reincidencia</span>
+                        </div>
+                        <div class="analysis-value">23%</div>
+                        <div class="analysis-chart"></div>
+                    </div>
+                    <div class="analysis-card">
+                        <div class="analysis-header">
+                            <span class="analysis-title">Índice de Peligrosidad</span>
+                        </div>
+                        <div class="analysis-value" style="color: #ffaa00;">MEDIO</div>
+                        <div class="analysis-chart"></div>
+                    </div>
+                    <div class="analysis-card">
+                        <div class="analysis-header">
+                            <span class="analysis-title">Patrón de Movimiento</span>
+                        </div>
+                        <div class="analysis-value">REGULAR</div>
+                        <div class="analysis-chart"></div>
+                    </div>
+                    <div class="analysis-card">
+                        <div class="analysis-header">
+                            <span class="analysis-title">Riesgo Suicidio</span>
+                        </div>
+                        <div class="analysis-value" style="color: #00ff88;">BAJO</div>
+                        <div class="analysis-chart"></div>
+                    </div>
+                    <div class="analysis-card">
+                        <div class="analysis-header">
+                            <span class="analysis-title">Radicalización</span>
+                        </div>
+                        <div class="analysis-value" style="color: #ffaa00;">35%</div>
+                        <div class="analysis-chart"></div>
+                    </div>
+                    <div class="analysis-card">
+                        <div class="analysis-header">
+                            <span class="analysis-title">Predicción 48h</span>
+                        </div>
+                        <div class="analysis-value">ESTABLE</div>
+                        <div class="analysis-chart"></div>
+                    </div>
+                </div>
+
+                <h3 style="color: #00ff88; margin: 2rem 0 1rem;">Recomendaciones del Sistema</h3>
+                <div class="info-card">
+                    <h4>Acciones Sugeridas por IA</h4>
+                    <ul style="margin-top: 1rem; padding-left: 1.5rem; color: #a0a8b8;">
+                        <li style="margin-bottom: 0.5rem;">Mantener vigilancia pasiva durante las próximas 48 horas</li>
+                        <li style="margin-bottom: 0.5rem;">Actualizar información de contactos conocidos</li>
+                        <li style="margin-bottom: 0.5rem;">Verificar actividad en redes sociales cada 6 horas</li>
+                        <li style="margin-bottom: 0.5rem;">Activar alertas para zonas restringidas</li>
+                        <li>Programar análisis profundo para el próximo ciclo</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="tab-content" id="documents">
+                <h3 style="color: #00ff88; margin-bottom: 1.5rem;">Documentos del Expediente</h3>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h4>📄 Acta de Nacimiento</h4>
+                        <p style="font-size: 0.9rem;">Verificado: ✓</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>📄 INE/IFE</h4>
+                        <p style="font-size: 0.9rem;">Verificado: ✓</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>📄 Comprobante Domicilio</h4>
+                        <p style="font-size: 0.9rem;">Pendiente</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>📄 Antecedentes</h4>
+                        <p style="font-size: 0.9rem;">2 registros</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>📸 Fotografías</h4>
+                        <p style="font-size: 0.9rem;">45 imágenes</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>🎥 Videos</h4>
+                        <p style="font-size: 0.9rem;">12 grabaciones</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>🎤 Audios</h4>
+                        <p style="font-size: 0.9rem;">8 grabaciones</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>📊 Reportes IA</h4>
+                        <p style="font-size: 0.9rem;">15 análisis</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>🔍 Búsquedas Web</h4>
+                        <p style="font-size: 0.9rem;">234 registros</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="agencies">
+                <h3 style="color: #00ff88; margin-bottom: 1.5rem;">Colaboración Interinstitucional</h3>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h4>🏛️ Fiscalía de Jalisco</h4>
+                        <p>Sin carpetas activas</p>
+                        <span class="sub-info">Última consulta: 15/09/2025</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>🛡️ C5 Escudo Urbano</h4>
+                        <p>Monitoreo Activo</p>
+                        <span class="sub-info">15 detecciones esta semana</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>🏥 Secretaría de Salud</h4>
+                        <p>Sin alertas médicas</p>
+                        <span class="sub-info">Historial: Normal</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>🔬 Ciencias Forenses</h4>
+                        <p>Sin registros</p>
+                        <span class="sub-info">N/A</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>⚖️ INJALRESO</h4>
+                        <p>Sin antecedentes</p>
+                        <span class="sub-info">Estado: Limpio</span>
+                    </div>
+                    <div class="info-card">
+                        <h4>🔍 Comisión de Búsqueda</h4>
+                        <p>No relacionado</p>
+                        <span class="sub-info">Sin coincidencias</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Sample data for individuals with more details
+        const individuals = [
+            {
+                id: 1,
+                name: "TOMAS ALEJANDRO PEÑA SANCHEZ",
+                userId: "PEST93",
+                curp: "PEST930628HJCXNM08",
+                rfc: "PEST930628IC0",
+                age: 31,
+                gender: "Masculino",
+                height: "",
+                phone: "3328284017",
+                mac: "A4:C3:F0:12:34:56",
+                risk: "medium",
+                status: "active",
+                lastSeen: "Hace 2 horas",
+                initials: "",
+                groups: ["Empleado"]
+            },
+            {
+                id: 2,
+                name: "brando lugo",
+                userId: "MGLO900225V8",
+                curp: "GALM900225MJCRPL08",
+                rfc: "GALM900225M72",
+                age: 19,
+                gender: "masculino",
+                height: "165 cm",
+                phone: "+52 33 2345 6789",
+                mac: "B8:27:EB:45:67:89",
+                risk: "low",
+                status: "monitoring",
+                lastSeen: "Hace 5 horas",
+                initials: "",
+                groups: ["Estudiante"]
+            },
+            
+        ];
+
+        // Load individuals on page load
+        window.onload = function() {
+            loadIndividuals();
+            selectIndividual(individuals[0]);
+        };
+
+        function loadIndividuals(filter = null) {
+            const list = document.getElementById('individualList');
+            list.innerHTML = '';
+            
+            let filtered = individuals;
+            if (filter) {
+                // Apply filters here
+            }
+            
+            filtered.forEach(person => {
+                const card = document.createElement('div');
+                card.className = 'individual-card';
+                card.onclick = () => selectIndividual(person);
+                
+                const riskClass = `risk-${person.risk}`;
+                
+                card.innerHTML = `
+                    <div class="risk-badge ${riskClass}">${person.risk.toUpperCase()}</div>
+                    <div class="individual-header">
+                        <div class="individual-avatar">${person.initials}</div>
+                        <div class="individual-info">
+                            <h3>${person.name}</h3>
+                            <p>ID: ${person.userId}</p>
+                            <p>${person.lastSeen}</p>
+                            <div class="individual-tags">
+                                ${person.groups.map(g => `<span class="tag">${g}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                list.appendChild(card);
+            });
+        }
+
+        function selectIndividual(person) {
+            // Update profile section
+            document.getElementById('profileImage').textContent = person.initials;
+            document.getElementById('individualName').textContent = person.name;
+            document.getElementById('userId').textContent = person.userId;
+            document.getElementById('curp').textContent = person.curp;
+            document.getElementById('rfc').textContent = person.rfc;
+            document.getElementById('age').textContent = person.age + ' años';
+            document.getElementById('gender').textContent = person.gender;
+            document.getElementById('height').textContent = person.height;
+            document.getElementById('phone').textContent = person.phone;
+            document.getElementById('mac').textContent = person.mac;
+            document.getElementById('lastSeenStat').textContent = person.lastSeen.replace('Hace ', '');
+            
+            // Reset to general tab
+            switchTab('general');
+        }
+
+        function switchTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to selected tab
+            const selectedTab = Array.from(tabs).find(tab => 
+                tab.textContent.toLowerCase().includes(tabName) || 
+                (tabName === 'general' && tab.textContent.includes('General')) ||
+                (tabName === 'occupation' && tab.textContent.includes('Ocupación')) ||
+                (tabName === 'routes' && tab.textContent.includes('Rutas')) ||
+                (tabName === 'social' && tab.textContent.includes('Sociales')) ||
+                (tabName === 'devices' && tab.textContent.includes('Dispositivos')) ||
+                (tabName === 'financial' && tab.textContent.includes('Financieros')) ||
+                (tabName === 'activity' && tab.textContent.includes('Actividad')) ||
+                (tabName === 'connections' && tab.textContent.includes('Conexiones')) ||
+                (tabName === 'analysis' && tab.textContent.includes('Análisis')) ||
+                (tabName === 'documents' && tab.textContent.includes('Documentos')) ||
+                (tabName === 'agencies' && tab.textContent.includes('Interinstitucional'))
+            );
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+        }
+
+        function toggleAdvancedSearch() {
+            const advSearch = document.getElementById('advancedSearch');
+            advSearch.classList.toggle('show');
+            event.target.textContent = advSearch.classList.contains('show') ? '▲ Búsqueda Avanzada' : '▼ Búsqueda Avanzada';
+        }
+
+        function searchIndividuals() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = individuals.filter(person => 
+                person.name.toLowerCase().includes(searchTerm) ||
+                person.curp.toLowerCase().includes(searchTerm) ||
+                person.rfc.toLowerCase().includes(searchTerm) ||
+                person.userId.toLowerCase().includes(searchTerm) ||
+                person.mac.toLowerCase().includes(searchTerm)
+            );
+            
+            loadIndividuals();
+            // Highlight matching cards
+            const cards = document.querySelectorAll('.individual-card');
+            cards.forEach((card, index) => {
+                if (!filtered.includes(individuals[index])) {
+                    card.style.opacity = '0.3';
+                }
+            });
+        }
+
+        function filterByRisk(risk) {
+            const chips = document.querySelectorAll('.chip');
+            chips.forEach(chip => chip.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (risk === 'all') {
+                loadIndividuals();
+            } else {
+                const filtered = individuals.filter(person => person.risk === risk);
+                loadIndividuals(filtered);
+            }
+        }
+
+        function filterByStatus(status) {
+            const chips = document.querySelectorAll('.chip');
+            event.target.classList.add('active');
+            
+            const filtered = individuals.filter(person => person.status === status);
+            loadIndividuals(filtered);
+        }
+
+        function filterByGroup(group) {
+            const chips = document.querySelectorAll('.chip');
+            event.target.classList.add('active');
+            
+            const filtered = individuals.filter(person => {
+                if (group === 'pve') return person.groups.includes('PVE');
+                if (group === 'radical') return person.groups.includes('Radical');
+                if (group === 'student') return person.groups.includes('Estudiante');
+                return true;
+            });
+            loadIndividuals(filtered);
+        }
+
+        function generateReport() {
+            alert('Generando carpeta de investigación completa...\n\nEl expediente será compartido con:\n• Fiscalía de Jalisco\n• C5 Escudo Urbano\n• Secretaría de Seguridad');
+        }
+
+        function markHighRisk() {
+            if (confirm('¿Está seguro de activar ALERTA CRÍTICA?\n\nEsto notificará a todas las unidades y activará protocolo de emergencia.')) {
+                alert('ALERTA CRÍTICA ACTIVADA\n\n• Notificando a todas las unidades\n• Activando vigilancia 24/7\n• Desplegando drones de vigilancia\n• Alertando a patrullas cercanas');
+            }
+        }
+
+        function shareWithAgencies() {
+            alert('Compartiendo expediente con instituciones:\n\n• Secretaría General de Gobierno\n• Secretaría de Salud\n• Fiscalía de Jalisco\n• C5 Escudo Urbano\n• Instituto de Ciencias Forenses\n• INJALRESO\n• Comisión de Búsqueda');
+        }
+    </script>
+</body>
+</html>

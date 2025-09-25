@@ -155,7 +155,7 @@ const DataProvider = ({ children }) => {
       // Limpia estados al cambiar de usuario
       setGeneralHeatPoints([]);
 
-      const res = await axios.get(`${API_URL}/api/v2/visitas/getPoints`);
+      const res = await axios.get(`${API_URL}/api/v2/visitas/getPoints2`);
       if (res.status === 200) {
         setGeneralHeatPoints(res.data);
       }
