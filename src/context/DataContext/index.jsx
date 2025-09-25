@@ -19,6 +19,7 @@ const DataProvider = ({ children }) => {
   const [lastVisits, setLastVisits] = useState([]);
   const [connectionsByHour, setConnectionsByHour] = useState([]);
   const [firstAndLastSeen, setFirstAndLastSeen] = useState(null);
+  const [count, setCount] = useState([]);
 
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -33,6 +34,18 @@ const DataProvider = ({ children }) => {
       console.error("Error fetching users:", err);
       setUsers([]);
     } 
+  };
+  
+  const fetchCount = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/v2/visitas/last24h`);
+      if (res.status === 200) {
+        setCount(Array.isArray(res.data) ? res.data : []);
+      }
+    } catch (err) {
+      console.error("Error fetching count:", err);
+      setCount([]);
+    }
   };
 
   const fetchRiskUsers = async () => {  
@@ -135,6 +148,8 @@ const DataProvider = ({ children }) => {
     }
   };
 
+
+
   const fetchGeneralHeatPoints = async (mac) => {
     try {
       // Limpia estados al cambiar de usuario
@@ -169,10 +184,12 @@ const DataProvider = ({ children }) => {
   fetchTopUsers();
   fetchTopRouters();
   fetchGeneralHeatPoints();
+  fetchCount();
+  fetchVisits();
 
   // Ejecuta fetchVisits cada 5s
   const interval = setInterval(() => {
-    fetchVisits();
+    // fetchCount();
     // console.log("Visitas cargadas");
   }, 5000);
 
@@ -201,6 +218,7 @@ const DataProvider = ({ children }) => {
         generalHeatPoints,
         firstAndLastSeen,
         fetchFirstAndLastSeen,
+        count,
       }}
     >
       {children}

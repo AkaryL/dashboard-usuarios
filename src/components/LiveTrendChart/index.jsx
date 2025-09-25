@@ -1,5 +1,5 @@
 // src/components/LiveTrendChart.jsx
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -12,13 +12,18 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Tooltip);
 
-export default function LiveTrendChart({ points = 80, height = 64 }) {
+export default function LiveTrendChart({
+  points = 80,
+  height = 64,
+  lineColor = "#6CFC4F",
+  fps = 20, // 20fps = 50ms por tick
+}) {
   const chartRef = useRef(null);
-  const frameRef = useRef(null);
+  const rafRef = useRef(0);
   const queueRef = useRef([]);
 
-  // señal suave + ruido
-  const nextValue = (() => {
+  // Generador de señal base + ruido suave
+  const nextValue = useMemo(() => {
     let v = 0.2, target = 0.3;
     return () => {
       if (Math.random() < 0.05) target = 0.15 + Math.random() * 0.6;
@@ -26,89 +31,116 @@ export default function LiveTrendChart({ points = 80, height = 64 }) {
       v += (Math.random() - 0.5) * 0.02;
       return Math.max(0.05, Math.min(0.95, v));
     };
-  })();
+  }, []);
 
-  function enqueueBeat() {
-    queueRef.current.push(0.3, 0.4, 1.0, 0.35, 0.25);
-  }
+  // Datos iniciales
+  const data = useMemo(() => {
+    const initial = Array.from({ length: points }, () => nextValue());
+    return {
+      labels: Array.from({ length: points }, (_, i) => i),
+      datasets: [
+        {
+          data: initial,
+          borderColor: lineColor,
+          borderWidth: 2,
+          tension: 0.25,
+          pointRadius: 0,
+        },
+      ],
+    };
+  }, [points, lineColor, nextValue]);
 
-  const initial = Array.from({ length: points }, () => nextValue());
-
-  const data = {
-    labels: Array.from({ length: points }, (_, i) => i),
-    datasets: [
-      {
-        data: initial,
-        borderColor: "#6CFC4F",
-        borderWidth: 2,
-        tension: 0.25,
-        pointRadius: 0,
-      },
-    ],
-  };
-
-  const options = {
+  // Opciones básicas
+  const options = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     parsing: false,
-    animation: { duration: 160, easing: "linear" },
+    animation: false,
     plugins: { legend: { display: false }, tooltip: { enabled: false } },
     scales: {
       x: { display: false },
       y: { display: false, min: 0, max: 1.2 },
     },
-  };
+  }), []);
 
-  // plugin opcional de "glow"
-  const glowPlugin = {
+  // Glow sencillo (sombra en el trazo)
+  const glowPlugin = useMemo(() => ({
     id: "glow",
     beforeDatasetsDraw(chart) {
       const { ctx } = chart;
       ctx.save();
       ctx.shadowColor = "rgba(108,252,79,0.6)";
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 10;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
     },
     afterDatasetsDraw(chart) {
       chart.ctx.restore();
     },
-  };
+  }), []);
 
+  // Gradiente dinámico: requiere chartArea (existe tras layout)
   useEffect(() => {
-    const chart = chartRef.current; // ✅ instancia real
+    const chart = chartRef.current;
     if (!chart) return;
 
-    // gradient dinámico
-    const { ctx } = chart;
-    const g = ctx.createLinearGradient(0, 0, 0, height);
-    g.addColorStop(0, "#6CFC4F");
-    g.addColorStop(1, "#6CFC4FCC");
-    chart.data.datasets[0].borderColor = g;
+    function applyGradient() {
+      const { ctx, chartArea } = chart;
+      if (!chartArea) return; // aún no hay layout
+      const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+      g.addColorStop(0, lineColor);
+      g.addColorStop(1, lineColor + "CC");
+      chart.data.datasets[0].borderColor = g;
+      chart.update("none");
+    }
 
-    const beatTimer = setInterval(() => enqueueBeat(), 1200 + Math.random() * 1300);
+    // Al primer layout y en cada resize, rehacemos el gradiente
+    const unsub = chart.$context?.resize || (() => {});
+    applyGradient();
+    // Chart.js no expone un onResize oficial aquí, así que rehacemos en rAF siguiente
+    // y cada que el browser resiza el canvas.
+    const onWindowResize = () => {
+      // Defer a siguiente frame para tener chartArea correcto
+      requestAnimationFrame(applyGradient);
+    };
+    window.addEventListener("resize", onWindowResize);
 
-    const stepMs = 50; // ≈20 fps (bájalo a 33 para más fluidez)
+    return () => {
+      window.removeEventListener("resize", onWindowResize);
+      unsub?.();
+    };
+  }, [lineColor]);
+
+  // Encola un “latido” (pico)
+  useEffect(() => {
+    const beat = () => queueRef.current.push(0.3, 0.4, 1.0, 0.35, 0.25);
+    const id = setInterval(beat, 1200 + Math.random() * 1300);
+    return () => clearInterval(id);
+  }, []);
+
+  // Bucle de actualización (streaming)
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    const stepMs = Math.max(16, Math.round(1000 / fps)); // clamp a 60fps min
     let last = performance.now();
 
-    function tick(now) {
+    const tick = (now) => {
       if (now - last >= stepMs) {
         const ds = chart.data.datasets[0].data;
         const next = queueRef.current.length ? queueRef.current.shift() : nextValue();
         ds.push(next);
         if (ds.length > points) ds.shift();
-        chart.update("default");
+        chart.update("none"); // sin anim extra
         last = now;
       }
-      frameRef.current = requestAnimationFrame(tick);
-    }
-    frameRef.current = requestAnimationFrame(tick);
-
-    return () => {
-      cancelAnimationFrame(frameRef.current);
-      clearInterval(beatTimer);
+      rafRef.current = requestAnimationFrame(tick);
     };
-  }, [points, height]);
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [fps, points, nextValue]);
 
   return (
     <div className="w-full" style={{ height }}>

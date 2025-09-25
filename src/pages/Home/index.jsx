@@ -4,13 +4,16 @@ import DataTable from "../../components/DataTable";
 import { TopList } from "../../components/TopList";
 import Heatmap from "../../components/Heatmap";
 import LiveTrendChart from "../../components/LiveTrendChart";
+import MiniECG from "../../components/MiniECG";
+import LiveDot from "../../components/LiveDot";
+import LiveTicker from "../../components/LiveTicker";
 
 const NEON = "#6CFC4F";
 const CYAN = "#00E5FF";
 const MAG  = "#FF3EF0";
 
 export default function Home() {
-  const { visits, topUsers, topRouters, generalHeatPoints, riskUsers } = useContext(DataContext);
+  const { visits, topUsers, topRouters, generalHeatPoints, riskUsers, count } = useContext(DataContext);
   const [mapData, setMapData] = useState([]);
 
   useEffect(() => {
@@ -76,9 +79,9 @@ export default function Home() {
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {[
-            { label: "Total de Visitas", comit: "ultimas 24 horas",value: visits?.length || 0, line: CYAN },
-            { label: "Usuarios Únicos",  comit: "ultimas 24 horas", value: topUsers?.length || 0, line: NEON },
-            { label: "Puntos Activos",  comit: "ultimas 24 horas", value: topRouters?.length || 0, line: MAG },
+            { label: "Total de Visitas", comit: "ultimas 24 horas",value: count[0]?.total_visitas || 0, line: CYAN },
+            { label: "Usuarios Únicos",  comit: "ultimas 24 horas", value: count[0]?.total_mac_unicas || 0, line: NEON },
+            { label: "Puntos Activos",  comit: "ultimas 24 horas", value: count[0]?.total_router_mac_diferentes || 0, line: MAG },
           ].map((s, i) => (
             <div
               key={i}
@@ -90,7 +93,7 @@ export default function Home() {
             >
               <div className="text-xs uppercase tracking-widest text-slate-400 ">{s.label}</div>
               <span className="text-xs" style={{ color: NEON }}>{s.comit}</span>
-              <div className="text-3xl font-semibold text-white">{s.value}</div>
+              <div className="text-3xl font-semibold text-white">{parseInt(s.value).toLocaleString()}</div>
             </div>
           ))}
         </div>
@@ -102,17 +105,14 @@ export default function Home() {
             className="rounded-xl border card-neon shadow-xl flex flex-col overflow-hidden"
             style={{ borderColor: "rgba(108,252,79,0.18)" }}
           >
-            <div
-              className="px-6 md:px-8 py-5 flex items-center justify-between"
-              style={{ borderBottom: "1px solid rgba(108,252,79,0.14)" }}
-            >
-              <div>
+            <div className="px-6 md:px-8 py-5 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(108,252,79,0.14)" }}>
+              <div className="flex items-center gap-3">
                 <h2 className="text-lg md:text-xl font-medium text-white">Actividad Reciente</h2>
-                <p className="text-sm text-slate-400 mt-1">Últimos registros de conexión</p>
+                <a className="text-sm font-medium" style={{ color: NEON }}>Últimos 100</a>
               </div>
-              <a className="text-sm font-medium" style={{ color: NEON }}>Ultimos 100 </a>
-              <div className="w-72 h-16">
-                <LiveTrendChart />
+              <div className="flex gap-4 mr-12 w-32 h-12">
+                <LiveDot />
+                <MiniECG width={128} height={90} fps={45} points={150} />
               </div>
             </div>
             <div className="flex-1 p-0 m-0">
