@@ -1,1 +1,29 @@
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Scrollbar claro */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d1d5db; /* gris-300 */
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f9fafb; /* gris-50 */
+}
+
+/* Scrollbar oscuro */
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #4b5563; /* gris-600 */
+}
+
+.dark ::-webkit-scrollbar-track {
+  background-color: #18181b; /* zinc-900 */
+}
