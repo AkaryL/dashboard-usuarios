@@ -1,0 +1,37 @@
+{
+  "name": "fleetwatch-backend",
+  "version": "1.0.0",
+  "description": "Backend API para FleetWatch - Sistema de monitoreo de flotas vehiculares",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch server/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint ."
+  },
+  "keywords": [
+    "fleet",
+    "tracking",
+    "gps",
+    "vehicles",
+    "api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.7.0",
+    "eslint": "^9.36.0",
+    "tsx": "^4.20.6",
+    "typescript": "~5.9.3"
+  }
+}
