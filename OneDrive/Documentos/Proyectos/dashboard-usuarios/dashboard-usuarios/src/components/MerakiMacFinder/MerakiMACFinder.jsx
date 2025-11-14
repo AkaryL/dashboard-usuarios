@@ -73,9 +73,9 @@ const MerakiMACFinder = () => {
         <p className="subtitle">Busque una MAC y visualice su ruta en el mapa</p>
       </div>
 
-      <div className="info-box">
+      {/* <div className="info-box">
         💡 <strong>Nueva funcionalidad:</strong> Visualice en un mapa interactivo las conexiones y rutas del cliente por todos los APs
-      </div>
+      </div> */}
 
       <SearchForm onSearch={handleSearch} loading={loading} />
 
