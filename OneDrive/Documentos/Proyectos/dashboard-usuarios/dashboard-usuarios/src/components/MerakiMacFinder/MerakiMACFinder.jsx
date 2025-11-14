@@ -73,9 +73,9 @@ const MerakiMACFinder = () => {
         <p className="subtitle">Busque una MAC y visualice su ruta en el mapa</p>
       </div>
 
-      {/* <div className="info-box">
-        💡 <strong>Nueva funcionalidad:</strong> Visualice en un mapa interactivo las conexiones y rutas del cliente por todos los APs
-      </div> */}
+      <div className="info-box">
+        💡 <strong>¡Proxy necesario!</strong> Antes de probar el sistema de rastreo de MACs es necesario ejecutar el servidor proxy con node.
+      </div>
 
       <SearchForm onSearch={handleSearch} loading={loading} />
 
